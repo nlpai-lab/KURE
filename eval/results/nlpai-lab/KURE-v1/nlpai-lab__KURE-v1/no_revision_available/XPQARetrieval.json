@@ -1,7 +1,7 @@
 {
   "dataset_revision": "c99d599f0a6ab9b85b065da6f9d94f9cf731679f",
   "task_name": "XPQARetrieval",
-  "mteb_version": "1.21.6",
+  "mteb_version": "1.14.15",
   "scores": {
     "test": [
       {
@@ -450,6 +450,6 @@
       }
     ]
   },
-  "evaluation_time": 14.467206716537476,
+  "evaluation_time": 14.467517137527466,
   "kg_co2_emissions": null
 }

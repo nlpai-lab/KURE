@@ -1,7 +1,7 @@
 {
   "dataset_revision": "75b399394a9803252cfec289d103de462763db7c",
   "task_name": "BelebeleRetrieval",
-  "mteb_version": "1.21.6",
+  "mteb_version": "1.14.15",
   "scores": {
     "test": [
       {
@@ -450,6 +450,6 @@
       }
     ]
   },
-  "evaluation_time": 19.279202222824097,
+  "evaluation_time": 19.279560327529907,
   "kg_co2_emissions": null
 }

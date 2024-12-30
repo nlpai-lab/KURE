@@ -1,7 +1,7 @@
 {
   "dataset_revision": "main",
   "task_name": "PublicHealthQA",
-  "mteb_version": "1.21.6",
+  "mteb_version": "1.14.15",
   "scores": {
     "test": [
       {
@@ -153,6 +153,6 @@
       }
     ]
   },
-  "evaluation_time": 1.9287936687469482,
+  "evaluation_time": 1.9292585849761963,
   "kg_co2_emissions": null
 }

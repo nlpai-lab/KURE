@@ -1,7 +1,7 @@
 {
   "dataset_revision": "fc24a3ce8f09746410daee3d5cd823ff7a0675b7",
   "task_name": "MrTidyRetrieval",
-  "mteb_version": "1.21.6",
+  "mteb_version": "1.14.15",
   "scores": {
     "test": [
       {
@@ -153,6 +153,6 @@
       }
     ]
   },
-  "evaluation_time": 11014.441509008408,
+  "evaluation_time": 11014.442053079605,
   "kg_co2_emissions": null
 }

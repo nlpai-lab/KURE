@@ -1,7 +1,7 @@
 {
   "dataset_revision": "main",
   "task_name": "MIRACLRetrieval",
-  "mteb_version": "1.21.6",
+  "mteb_version": "1.14.15",
   "scores": {
     "dev": [
       {
@@ -153,6 +153,6 @@
       }
     ]
   },
-  "evaluation_time": 10909.090243339539,
+  "evaluation_time": 10909.09098982811,
   "kg_co2_emissions": null
 }
