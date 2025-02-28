@@ -81,22 +81,23 @@ model_names = [
     # my_model_directory
 ]
 model_names = [
-    "Salesforce/SFR-Embedding-2_R", # 4096
-    "Alibaba-NLP/gte-Qwen2-7B-instruct", # 8192
-    "BAAI/bge-multilingual-gemma2", # 8192
-    "intfloat/e5-mistral-7b-instruct", # 32768
-    "intfloat/multilingual-e5-large-instruct", # 512
-    "openai/text-embedding-3-large", # 8191
-    "Alibaba-NLP/gte-multilingual-base", 
-    "intfloat/multilingual-e5-base", # 512
-    "intfloat/multilingual-e5-large", # 512
-    "jinaai/jina-embeddings-v3", # 8192
-    "jhgan/ko-sroberta-multitask", # 128
-    "BAAI/bge-m3", # 8192
-    "nlpai-lab/KoE5", # 512
-    "dragonkue/BGE-m3-ko", # 8192
-    "Snowflake/snowflake-arctic-embed-l-v2.0", # 8192,
-    "nlpai-lab/KURE-v1" # 8192
+    # "Salesforce/SFR-Embedding-2_R", # 4096
+    # "Alibaba-NLP/gte-Qwen2-7B-instruct", # 8192
+    # "BAAI/bge-multilingual-gemma2", # 8192
+    # "intfloat/e5-mistral-7b-instruct", # 32768
+    # "intfloat/multilingual-e5-large-instruct", # 512
+    # "openai/text-embedding-3-large", # 8191
+    # "Alibaba-NLP/gte-multilingual-base", 
+    # "intfloat/multilingual-e5-base", # 512
+    # "intfloat/multilingual-e5-large", # 512
+    # "jinaai/jina-embeddings-v3", # 8192
+    # "jhgan/ko-sroberta-multitask", # 128
+    # "BAAI/bge-m3", # 8192
+    # "nlpai-lab/KoE5", # 512
+    # "dragonkue/BGE-m3-ko", # 8192
+    # "Snowflake/snowflake-arctic-embed-l-v2.0", # 8192,
+    # "nlpai-lab/KURE-v1", # 8192,
+    "nomic-ai/nomic-embed-text-v2-moe"
 ] + model_names
 
 def evaluate_model(model_name, gpu_id, tasks):
@@ -110,13 +111,19 @@ def evaluate_model(model_name, gpu_id, tasks):
                 static_embedding = StaticEmbedding.from_model2vec(model_name)
                 model = SentenceTransformer(modules=[static_embedding], model_kwargs={"attn_implementation": "sdpa"})
             else:
-                if model_name == "nlpai-lab/KoE5" or model_name == "KU-HIAI-ONTHEIT/ontheit-large-v1_1":
+                if model_name == "nlpai-lab/KoE5" or model_name == "KU-HIAI-ONTHEIT/ontheit-large-v1_1" :
                     # mE5 기반의 모델이므로, 해당 프롬프트를 추가시킵니다.
                     model_prompts = {
                         PromptType.query.value: "query: ",
                         PromptType.passage.value: "passage: ",
                     }
                     model = SentenceTransformerWrapper(model=model_name, model_prompts=model_prompts, model_kwargs={"attn_implementation": "sdpa"})
+                elif model_name == "nomic-ai/nomic-embed-text-v2-moe":
+                    model_prompts = {
+                        PromptType.query.value: "search_query: ",
+                        PromptType.passage.value: "search_document: ",
+                    }
+                    model = SentenceTransformerWrapper(model=model_name, model_prompts=model_prompts, model_kwargs={"attn_implementation": "sdpa"}, trust_remote_code=True)
                 elif model_name == "BAAI/bge-multilingual-gemma2":
                      # mbge-gemma2의 경우, mteb에서 지원하지 않습니다. 따라서, instruct_wrapper를 사용합니다.
                     instruction_template = '<instruct>{instruction}\n<query>'
@@ -137,7 +144,7 @@ def evaluate_model(model_name, gpu_id, tasks):
                     model = SentenceTransformerWrapper(model=model_name, model_prompts=model_prompts, model_kwargs={"attn_implementation": "sdpa"})
                 else:
                     # mteb에 등록된 모델의 경우, 프롬프트/prefix 등을 포함하여 평가할 수 있습니다. 등록되지 않은 경우, sentence-transformer를 사용하여 불러옵니다.
-                    model = mteb.get_model(model_name, model_kwargs={"attn_implementation": "sdpa"})
+                    model = mteb.get_model(model_name)
         else: # 직접 학습한 모델의 경우
             file_name = os.path.join(model_name, "model.safetensors")
             if os.path.exists(file_name):
@@ -154,7 +161,7 @@ def evaluate_model(model_name, gpu_id, tasks):
                 tasks=get_tasks(tasks=tasks, languages=["kor-Kore", "kor-Hang", "kor_Hang"])
             )
             # 48GB VRAM 기준 적합한 batch sizes
-            if "multilingual-e5" in model_name or "KoE5" in model_name or "ontheit" in model_name:
+            if "multilingual-e5" in model_name or "KoE5" in model_name or "ontheit" in model_name or "nomic" in model_name:
                 batch_size = 512
             elif "jina" in model_name:
                 batch_size = 8
