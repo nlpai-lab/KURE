@@ -1,7 +1,7 @@
 # 🔎 KURE: Korea University Retrieval Embedding model
 
 ## Update Logs
-- 2024.12.21: [🤗 KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1) and the [MTEB-ko-retrieval Leaderboard](https://github.com/nlpai-lab/KURE?tab=readme-ov-file#mteb-ko-retrieval-leaderboard) have been released.
+- 2024.12.21: [🤗 KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1) and the [MTEB-ko-retrieval Leaderboard](https://github.com/nlpai-lab/KURE/blob/main/README_EN.md#mteb-ko-retrieval-leaderboard) have been released.
 - 2024.10.02: [🤗 KoE5](https://huggingface.co/nlpai-lab/KoE5) and [🤗 ko-triplet-v1.0](https://huggingface.co/datasets/nlpai-lab/ko-triplet-v1.0) have been released.
 
 ---
