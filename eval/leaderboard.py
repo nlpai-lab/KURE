@@ -17,7 +17,7 @@ def app():
         "BelebeleRetrieval",
         "MrTidyRetrieval",
         "MultiLongDocRetrieval",
-        "XPQARetrieval"
+        # "XPQARetrieval"
     ]
     top_k_types = ["top1", "top3", "top5", "top10"]
 
