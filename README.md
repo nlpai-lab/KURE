@@ -170,12 +170,12 @@ streamlit run leaderboard.py
 | jhgan/ko-sroberta-multitask                   | 0.1B       | 0.29500           | 0.02950              | 0.21082         | 0.05364       |
 <br/>
 
-### 결과 요약
-KURE-v1은 두 평가 결과에서 모두 상위권의 성능을 보였습니다.
-- **전체 평균(Average Results):** 다양한 길이와 도메인의 데이터셋을 종합한 평가에서 비슷한 크기의 모델들 중 우수한 성능을 기록했습니다.
-- **장문(MultiLongDoc Results):** 평균 길이가 13,000자가 넘는 장문 데이터셋에서도 0.6B 크기의 모델들 중 가장 우수한 검색 능력을 보였습니다.
+### Conclusion
+KURE-v1은 두 평가 결과에서 모두 상위권의 성능을 보입니다.
+- **전체 평균(Average Results):** 다양한 길이와 도메인의 데이터셋을 종합한 평가에서 비슷한 크기의 모델들 중 우수한 성능을 기록합니다.
+- **장문(MultiLongDoc Results):** 평균 길이가 13,000자가 넘는 장문 데이터셋에서도 0.6B 크기의 모델들 중 가장 우수한 검색 능력을 보입니다.
 
-이를 통해 KURE-v1이 문서 길이에 구애받지 않고 강건한 성능을 보이는 모델임을 확인할 수 있습니다.
+이를 통해 KURE-v1은 문서 길이에 구애받지 않고 강건한 성능을 보이는 모델임을 확인할 수 있습니다.
 
 ## Training Details
 - KURE-v1은 [BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3)를 기반으로 fine-tuning된 모델입니다.
