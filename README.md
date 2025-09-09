@@ -106,10 +106,10 @@ streamlit run leaderboard.py
 자세한 결과는 `eval/results`폴더에서 확인하실 수 있습니다.
 | Model                                         | Parameters | Average Recall@10 | Average Precision@10 | Average NDCG@10 | Average F1@10 |
 |-----------------------------------------------|------------|----------------|-------------------|--------------|------------|
-| **Qwen/Qwen3-Embedding-8B**                   | **8B**     | **0.86157**    | **0.11302**       | **0.76349**  | **0.19715**|
+| Qwen/Qwen3-Embedding-8B                   | 8B     | 0.86157    | 0.11302       | 0.76349  | 0.19715|
 | Qwen/Qwen3-Embedding-4B                       | 4B         | 0.85261        | 0.11111           | 0.74844      | 0.19412    |
 | telepix/PIXIE-Rune-Preview                    | 0.6B       | 0.83771        | 0.10890           | 0.74201      | 0.19041    |
-| nlpai-lab/KURE-v1                             | 0.6B       | 0.83997        | 0.11020           | 0.73947      | 0.19232    |
+| **nlpai-lab/KURE-v1**                             | **0.6B**       | **0.83997**        | **0.11020**           | **0.73947**      | **0.19232**    |
 | dragonkue/snowflake-arctic-embed-l-v2.0-ko    | 0.6B       | 0.83460        | 0.10850           | 0.73855      | 0.18973    |
 | telepix/PIXIE-Spell-Preview-1.7B              | 1.7B       | 0.83403        | 0.10681           | 0.73420      | 0.18730    |
 | BAAI/bge-m3                                   | 0.6B       | 0.83988        | 0.11057           | 0.73388      | 0.19286    |
@@ -140,11 +140,11 @@ streamlit run leaderboard.py
 아래는 평균적으로 길이가 긴 문서들인 MultiLongDocRetrieval 데이터셋에 대한 평가 결과입니다.
 | Model                                         | Parameters | Average Recall@10 | Average Precision@10 | Average NDCG@10 | Average F1@10 |
 |-----------------------------------------------|------------|-------------------|----------------------|-----------------|---------------|
-| **Qwen/Qwen3-Embedding-8B**                   | **8B**     | **0.65250**       | **0.06525**          | **0.51027**     | **0.11864**   |
+| Qwen/Qwen3-Embedding-8B                   | 8B     | 0.65250       | 0.06525          | 0.51027     | 0.11864   |
 | Qwen/Qwen3-Embedding-4B                       | 4B         | 0.61000           | 0.06100              | 0.48661         | 0.11091       |
 | Alibaba-NLP/gte-multilingual-base             | 0.3B       | 0.61250           | 0.06125              | 0.47568         | 0.11136       |
 | telepix/PIXIE-Spell-Preview-1.7B              | 1.7B       | 0.58750           | 0.05875              | 0.47479         | 0.10682       |
-| nlpai-lab/KURE-v1                             | 0.6B       | 0.58000           | 0.05800              | 0.46369         | 0.10545       |
+| **nlpai-lab/KURE-v1**                             | **0.6B**       | **0.58000**           | **0.05800**              | **0.46369**         | **0.10545**       |
 | telepix/PIXIE-Rune-Preview                    | 0.6B       | 0.56250           | 0.05625              | 0.43975         | 0.10227       |
 | dragonkue/snowflake-arctic-embed-l-v2.0-ko    | 0.6B       | 0.55250           | 0.05525              | 0.43045         | 0.10045       |
 | BAAI/bge-m3                                   | 0.6B       | 0.55500           | 0.05550              | 0.42870         | 0.10091       |
