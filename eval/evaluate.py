@@ -78,7 +78,8 @@ model_names = [
     # "telepix/PIXIE-Spell-Preview-0.6B", # 32768
     # "telepix/PIXIE-Rune-Preview", # 8192 
     # "telepix/PIXIE-Spell-Preview-1.7B", # 32768
-	# "google/embeddinggemma-300m" # 2048
+	# "google/embeddinggemma-300m", # 2048
+	# "SamilPwC-AXNode-GenAI/PwC-Embedding_expr" # 512
 ] + model_names
 
 save_path = "./RESULTS_DEV"
@@ -90,7 +91,6 @@ def evaluate_model(model_name, gpu_id, tasks):
         torch.cuda.set_device(device)
         os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
 
-        
         model = None
         if not os.path.exists(model_name): # hf에 등록된 모델의 경우
             if "m2v" in model_name: # model2vec의 경우: 모델명에 m2v를 포함시켜주어야 model2vec 모델로 인식합니다.
@@ -114,7 +114,7 @@ def evaluate_model(model_name, gpu_id, tasks):
                         PromptType.query.value: "<Q>",
                         PromptType.document.value: "<P>",
                     }
-                    model = mteb.get_model(model_name, model_prompts=model_prompts, device=device)
+                    model = SentenceTransformerWrapper(model_name, model_prompts=model_prompts, device=device)
                 else:
                     # mteb에 등록된 모델의 경우, 프롬프트/prefix 등을 포함하여 평가할 수 있습니다. 등록되지 않은 경우, sentence-transformers를 사용하여 불러옵니다.
                     model = mteb.get_model(model_name, device=device)
