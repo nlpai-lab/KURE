@@ -72,16 +72,16 @@ print(similarities)
 <details>
 <summary>XPQARetrieval 데이터셋 제외 이유</summary>
 
-- 저희 평가에서는 XPQARetrieval 데이터셋을 제외하여 평가하였습니다. XPQA는 Cross-Lingual QA 능력을 평가하기 위한 데이터셋으로, 질의를 기반으로 근거 문서를 찾아야 하는 검색 태스크 평가에 사용하기에는 부적절하다고 판단하였습니다.
+- 저희 평가에서는 [XPQARetrieval](https://huggingface.co/datasets/jinaai/xpqa) 데이터셋을 제외하여 평가하였습니다. XPQA는 Cross-Lingual QA 능력을 평가하기 위한 데이터셋으로, 질의를 기반으로 근거 문서를 찾아야 하는 검색 태스크 평가에 사용하기에는 부적절하다고 판단하였습니다.
 - XPQARetrieval 데이터셋의 예시는 다음과 같습니다.
 ```json
 {
-	“query”: ”미개봉인가요?”,
-	“document”: ”아니요. 리뉴얼된 제품입니다.”
+	"query": "미개봉인가요?",
+	"document": "아니요. 리뉴얼된 제품입니다."
 },
 {
-	“query”: ”아이패드에어 3와 호환이 가능합니까?”,
-	“document”: ”네, 가능합니다.”
+	"query": "아이패드에어 3와 호환이 가능합니까?",
+	"document": "네, 가능합니다."
 }
 ```
 
@@ -172,7 +172,7 @@ streamlit run leaderboard.py
 
 ### Conclusion
 KURE-v1은 두 평가 결과에서 모두 상위권의 성능을 보입니다.
-- **전체 평균(Average Results):** 다양한 길이와 도메인의 데이터셋을 종합한 평가에서 비슷한 크기의 모델들 중 우수한 성능을 기록합니다.
+- **전체 평균:** 다양한 길이와 도메인의 데이터셋을 종합한 평가에서 비슷한 크기의 모델들 중 우수한 성능을 기록합니다.
 - **장문(MultiLongDoc Results):** 평균 길이가 13,000자가 넘는 장문 데이터셋에서도 0.6B 크기의 모델들 중 가장 우수한 검색 능력을 보입니다.
 
 이를 통해 KURE-v1은 문서 길이에 구애받지 않고 강건한 성능을 보이는 모델임을 확인할 수 있습니다.
