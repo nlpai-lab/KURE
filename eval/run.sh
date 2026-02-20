@@ -7,8 +7,8 @@
 # - 완료된 태스크 자동 스킵
 
 MODELS=(
-    # "BAAI/bge-m3"
-	# "Alibaba-NLP/gte-multilingual-base"
+    "BAAI/bge-m3"
+	"Alibaba-NLP/gte-multilingual-base"
 	"google/embeddinggemma-300m"
     "nlpai-lab/KURE-v1"
     "jinaai/jina-embeddings-v3"

@@ -26,6 +26,7 @@ def _is_flash_attn_error(error: Exception) -> bool:
         "flash-attention",
         "does not support flash attention",
         "flashattention",
+        "is not installed",
     ])
 
 

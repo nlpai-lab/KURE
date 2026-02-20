@@ -149,3 +149,47 @@ NanoQuoraRetrievalKo = _create_nanobeir_ko_task("NanoQuoraRetrieval")
 NanoSCIDOCSKo = _create_nanobeir_ko_task("NanoSCIDOCS")
 NanoSciFactKo = _create_nanobeir_ko_task("NanoSciFact")
 NanoTouche2020Ko = _create_nanobeir_ko_task("NanoTouche2020")
+
+
+# ---------------------------------------------------------------------------
+# Register custom tasks into MTEB's internal task registry so that
+# mteb.get_task("NanoHotpotQAKo") works.  This prevents KeyError when
+# MTEB's prompt-resolution fallback (abs_encoder.py:get_instruction) calls
+# mteb.get_task() for tasks not shipped with the MTEB package.
+#
+# Behavior after registration:
+#   1. Model's own prompts (prompts_dict) are checked first  → used if found
+#   2. Fallback: AbsTaskRetrieval.abstask_prompt ("Retrieve text based on
+#      user query.") is returned — identical to all other MTEB retrieval tasks.
+# ---------------------------------------------------------------------------
+def _register_nanobeir_ko_tasks() -> None:
+    """Register NanoBEIR-ko task classes in MTEB's _TASKS_REGISTRY."""
+    try:
+        from mteb.get_tasks import _TASKS_REGISTRY
+    except ImportError:
+        logger.debug("Could not import _TASKS_REGISTRY, skipping custom task registration")
+        return
+
+    _TASK_CLASSES = {
+        "NanoArguAnaKo": NanoArguAnaKo,
+        "NanoClimateFEVERKo": NanoClimateFEVERKo,
+        "NanoDBPediaKo": NanoDBPediaKo,
+        "NanoFEVERKo": NanoFEVERKo,
+        "NanoFiQA2018Ko": NanoFiQA2018Ko,
+        "NanoHotpotQAKo": NanoHotpotQAKo,
+        "NanoMSMARCOKo": NanoMSMARCOKo,
+        "NanoNFCorpusKo": NanoNFCorpusKo,
+        "NanoNQKo": NanoNQKo,
+        "NanoQuoraRetrievalKo": NanoQuoraRetrievalKo,
+        "NanoSCIDOCSKo": NanoSCIDOCSKo,
+        "NanoSciFactKo": NanoSciFactKo,
+        "NanoTouche2020Ko": NanoTouche2020Ko,
+    }
+
+    for name, cls in _TASK_CLASSES.items():
+        if name not in _TASKS_REGISTRY:
+            _TASKS_REGISTRY[name] = cls
+            logger.debug(f"Registered custom task '{name}' in MTEB registry")
+
+
+_register_nanobeir_ko_tasks()
