@@ -1,194 +1,522 @@
-"""Benchmarking all datasets constituting the MTEB Korean leaderboard & average scores"""
+"""
+KURE Evaluation System
+
+Benchmarking embedding models on Korean retrieval tasks including:
+- MTEB Korean Retrieval tasks (8 tasks)
+- NanoBEIR-ko tasks (13 subsets)
+
+Features:
+- bf16 + flash-attention support for optimized inference
+- MRL (Matryoshka) dimension truncation support
+- MTEB automatic prompt handling
+- Multi-GPU parallel evaluation with task queue
+- Sequential task processing per GPU (queue-based)
+"""
+
 from __future__ import annotations
 
-import os
-import logging
-from multiprocessing import Process, current_process
-import torch
-import hashlib
-
-from sentence_transformers import SentenceTransformer
-from sentence_transformers.models import StaticEmbedding
-
-import mteb
-from mteb import MTEB, get_tasks
-from mteb.encoder_interface import PromptType
-from mteb.models.sentence_transformer_wrapper import SentenceTransformerWrapper
-from mteb.models.instruct_wrapper import instruct_wrapper
-
 import argparse
-from dotenv import load_dotenv
-from setproctitle import setproctitle
-import traceback
+import json
 import logging
+import os
+import sys
+import time
+import traceback
+from multiprocessing import Process, Queue, current_process
+from pathlib import Path
+from typing import Any
 
-# load_dotenv() # for OPENAI
+import torch
+from setproctitle import setproctitle
 
-parser = argparse.ArgumentParser(description="Extract contexts")
-parser.add_argument('--quantize', default=False, type=bool, help='quantize embeddings')
-args = parser.parse_args()
+from mteb import MTEB
 
-logging.basicConfig(level=logging.INFO)
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-logger = logging.getLogger("main")
+from eval.models.loader import load_model, get_output_folder
+from eval.models.config import get_model_config
+from eval.tasks.registry import get_all_tasks, get_task_names, MTEB_TASKS, NANOBEIR_KO_TASK_NAMES
 
-# MIRACL, MrTidy는 평가 시 시간이 오래 걸리기 때문에, 태스크별로 나누어 multiprocessing으로 평가합니다.
-# 필요 시 GPU 번호를 다르게 조정해 주세요.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger("evaluate")
 
-TASK_LIST_RETRIEVAL_GPU_MAPPING = {
-	0: [
-		"BelebeleRetrieval",
-		"XPQARetrieval",
-		"MultiLongDocRetrieval",
-		"Ko-StrategyQA",
-		"AutoRAGRetrieval",
-		"PublicHealthQA",
-	],
-	1: ["MIRACLRetrieval"],
-	2: ["MrTidyRetrieval"],
+# Suppress noisy HTTP request logs from huggingface_hub
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("huggingface_hub").setLevel(logging.WARNING)
+logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
+
+# GPU task distribution balanced by corpus size and compute requirements
+# Total: 8 MTEB + 13 NanoBEIR-ko = 21 tasks across 3 GPUs
+TASK_GPU_MAPPING = {
+    0: [
+        # MTEB tasks (smaller corpora)
+        "BelebeleRetrieval",
+        "Ko-StrategyQA",
+        "AutoRAGRetrieval",
+        "PublicHealthQA",
+		# "XPQARetrieval",
+		"LawIRKo",
+        "MultiLongDocRetrieval",
+        # NanoBEIR-ko tasks
+        "NanoArguAnaKo",
+        "NanoClimateFEVERKo",
+        "NanoDBPediaKo",
+        "NanoFEVERKo",
+		"NanoQuoraRetrievalKo",
+        "NanoSCIDOCSKo",
+        "NanoSciFactKo",
+        "NanoTouche2020Ko",
+    ],
+    1: [
+        # NanoBEIR-ko tasks
+		"NanoFiQA2018Ko",
+        "NanoHotpotQAKo",
+        "NanoMSMARCOKo",
+        "NanoNFCorpusKo",
+        "NanoNQKo",	
+        # MTEB tasks (large corpus)
+        "MIRACLRetrieval",
+    ],
+    2: [
+        # MTEB tasks (large corpora)
+		"SQuADKorV1Retrieval",
+        "MrTidyRetrieval",
+    ],
 }
 
-model_names = [
-	# my_model_directory
-]
-model_names = [
-	# "Salesforce/SFR-Embedding-2_R", # 4096
-	# "Alibaba-NLP/gte-Qwen2-7B-instruct", # 8192
-	# "intfloat/e5-mistral-7b-instruct", # 32768
-	# "intfloat/multilingual-e5-large-instruct", # 512
-	# "openai/text-embedding-3-large", # 8191
-	# "Alibaba-NLP/gte-multilingual-base", # 8192
-	# "upskyy/bge-m3-korean", #8192
-	# "intfloat/multilingual-e5-base", # 512
-	# "intfloat/multilingual-e5-large", # 512
-	# "jhgan/ko-sroberta-multitask", # 128
-	# "BAAI/bge-multilingual-gemma2", # 8192
-	# "BAAI/bge-m3", # 8192
-	# "nlpai-lab/KoE5", # 512
-	# "jinaai/jina-embeddings-v3", # 8192
-	# "nomic-ai/nomic-embed-text-v2-moe", # 512
-	# "dragonkue/BGE-m3-ko", # 8192
-	# "Snowflake/snowflake-arctic-embed-l-v2.0", # 8192,
-	# "nlpai-lab/KURE-v1", # 8192,
-	# "dragonkue/snowflake-arctic-embed-l-v2.0-ko", # 8192
-	# "Qwen/Qwen3-Embedding-0.6B", # 32768
-	# "Qwen/Qwen3-Embedding-4B", # 32768
-	# "Qwen/Qwen3-Embedding-8B", # 32768
-	# "FronyAI/frony-embed-medium-arctic-ko-v2.5", # 8192
-	# "telepix/PIXIE-Spell-Preview-0.6B", # 32768
-	# "telepix/PIXIE-Rune-Preview", # 8192 
-	# "telepix/PIXIE-Spell-Preview-1.7B", # 32768
-	# "google/embeddinggemma-300m", # 2048
-	# "SamilPwC-AXNode-GenAI/PwC-Embedding_expr" # 512
-] + model_names
 
-save_path = "./RESULTS_DEV"
+def get_tasks_for_gpu(gpu_id: int, requested_tasks: list[str] | None = None) -> list[str]:
+    """Get tasks assigned to a specific GPU, filtered by requested tasks."""
+    gpu_tasks = TASK_GPU_MAPPING.get(gpu_id, [])
 
-def evaluate_model(model_name, gpu_id, tasks):
-	import torch
-	try:
-		device = torch.device(f"cuda:{str(gpu_id)}") 
-		torch.cuda.set_device(device)
-		os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+    if requested_tasks is None:
+        return gpu_tasks
 
-		model = None
-		if not os.path.exists(model_name): # hf에 등록된 모델의 경우
-			if "m2v" in model_name: # model2vec의 경우: 모델명에 m2v를 포함시켜주어야 model2vec 모델로 인식합니다.
-				static_embedding = StaticEmbedding.from_model2vec(model_name)
-				model = SentenceTransformer(modules=[static_embedding], device=device)
-			else:
-				if model_name == "nlpai-lab/KoE5" or "KU-HIAI-ONTHEIT" in model_name:
-					# mE5 기반의 모델이므로, 해당 프롬프트를 추가시킵니다.
-					model_prompts = {
-						PromptType.query.value: "query: ",
-						PromptType.document.value: "passage: ",
-					}
-					model = SentenceTransformerWrapper(model=model_name, model_prompts=model_prompts, device=device)
-				elif "snowflake" in model_name.lower() or "pixie" in model_name.lower():
-					model_prompts = {
-						PromptType.query.value: "query: ",
-					}
-					model = SentenceTransformerWrapper(model=model_name, model_prompts=model_prompts, device=device)
-				elif "frony" in model_name:
-					model_prompts = {
-						PromptType.query.value: "<Q>",
-						PromptType.document.value: "<P>",
-					}
-					model = SentenceTransformerWrapper(model_name, model_prompts=model_prompts, device=device)
-				else:
-					# mteb에 등록된 모델의 경우, 프롬프트/prefix 등을 포함하여 평가할 수 있습니다. 등록되지 않은 경우, sentence-transformers를 사용하여 불러옵니다.
-					model = mteb.get_model(model_name, device=device)
-		else: # 직접 학습한 모델의 경우
-			file_name = os.path.join(model_name, "model.safetensors")
-			if os.path.exists(file_name):
-				if "m2v" in model_name:
-					static_embedding = StaticEmbedding.from_model2vec(model_name)
-					model = SentenceTransformer(modules=[static_embedding], device=device)
-				else:
-					model = mteb.get_model(model_name, device=device)
+    # Filter to only requested tasks
+    return [t for t in gpu_tasks if t in requested_tasks]
 
-		if model:
-			output_folder_name = os.path.basename(model_name)
-			if os.path.isdir(model_name) and len(output_folder_name) > 100:
-				model_hash = hashlib.md5(model_name.encode()).hexdigest()[:6]
-				output_folder_name = f"{output_folder_name[:93]}_{model_hash}"
 
-			if os.path.isdir(model_name):
-				try:
-					model.model_meta.name = output_folder_name
-				except AttributeError:
-					logger.warning("Could not override model_meta.name. Path might still be too long.")
-			
-			setproctitle(f"{output_folder_name}-{gpu_id}")
-			print(f"Running tasks: {tasks} / {model_name} on GPU {gpu_id} in process {current_process().name}")
-			evaluation = MTEB(
-				tasks=get_tasks(tasks=tasks, languages=["kor-Kore", "kor-Hang", "kor_Hang"])
-			)
-			# 48GB VRAM 기준 적합한 batch sizes
-			if "multilingual-e5" in model_name or "KoE5" in model_name or "ontheit" in model_name:
-				batch_size = 512
-			elif "jina" in model_name:
-				batch_size = 8
-			elif "bge-m3" in model_name or "Snowflake" in model_name:
-				batch_size = 64
-			elif "gemma2" in model_name:
-				batch_size = 256 
-			elif "Salesforce" in model_name:
-				batch_size = 8
-			elif "embeddinggemma" in model_name:
-				batch_size = 256
-			else:
-				batch_size = 64
+def check_task_completed(output_dir: str, output_folder: str, task_name: str) -> bool:
+    """Check if a task has already been completed by looking for result file."""
+    # MTEB saves results as {task_name}.json
+    result_path = Path(output_dir) / output_folder
 
-			if args.quantize:
-				evaluation.run(
-					model,
-					output_folder=f"{save_path}/{output_folder_name}-quantized",
-					encode_kwargs={"batch_size": batch_size, "precision": "binary"},
-				)
-			else:
-				evaluation.run(
-					model,
-					output_folder=f"{save_path}/{output_folder_name}",
-					encode_kwargs={"batch_size": batch_size},
-				)
-	except Exception as ex:
-		print(ex)
-		traceback.print_exc()
+    # Check for various possible result file patterns
+    possible_files = [
+        result_path / f"{task_name}.json",
+        result_path / task_name / "results.json",
+    ]
+
+    for file_path in possible_files:
+        if file_path.exists():
+            try:
+                with open(file_path) as f:
+                    data = json.load(f)
+                # Verify it has actual results
+                if data and ("scores" in data or "test" in data):
+                    return True
+            except (json.JSONDecodeError, KeyError):
+                pass
+
+    return False
+
+
+def evaluate_single_task(
+    model: Any,
+    task_name: str,
+    output_dir: str,
+    output_folder: str,
+    batch_size: int,
+    gpu_id: int,
+) -> bool:
+    """
+    Evaluate a single task.
+
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        # Get task instance
+        task_instances = get_all_tasks([task_name])
+
+        if not task_instances:
+            logger.warning(f"GPU {gpu_id}: Task '{task_name}' not found, skipping")
+            return False
+
+        task = task_instances[0]
+        logger.info(f"GPU {gpu_id}: Starting task '{task_name}'")
+
+        # Run evaluation for this single task
+        evaluation = MTEB(tasks=[task])
+        evaluation.run(
+            model,
+            output_folder=os.path.join(output_dir, output_folder),
+            encode_kwargs={"batch_size": batch_size},
+        )
+
+        logger.info(f"GPU {gpu_id}: Completed task '{task_name}'")
+        return True
+
+    except Exception as e:
+        logger.error(f"GPU {gpu_id}: Error in task '{task_name}': {e}")
+        traceback.print_exc()
+        return False
+
+
+def evaluate_model_on_gpu_queue(
+    model_name: str,
+    gpu_id: int,
+    task_queue: list[str],
+    output_dir: str,
+    use_bf16: bool = True,
+    use_flash_attn: bool = True,
+    truncate_dim: int | None = None,
+    batch_size_override: int | None = None,
+    skip_completed: bool = True,
+) -> None:
+    """
+    Evaluate a model on tasks from a queue, one task at a time.
+
+    Tasks are processed sequentially - when one finishes, the next starts.
+    Model is loaded once and reused for all tasks.
+
+    Args:
+        model_name: HuggingFace model name or local path
+        gpu_id: GPU device ID
+        task_queue: List of task names to evaluate (processed sequentially)
+        output_dir: Base output directory for results
+        use_bf16: Whether to use bfloat16 precision
+        use_flash_attn: Whether to use flash attention 2
+        truncate_dim: MRL truncation dimension (None = full dimension)
+        batch_size_override: Override batch size from config
+        skip_completed: Skip tasks that already have results
+    """
+    try:
+        # Set GPU device
+        device = torch.device(f"cuda:{gpu_id}")
+        torch.cuda.set_device(device)
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+
+        # Generate output folder name
+        output_folder = get_output_folder(model_name, truncate_dim)
+
+        # Set process title for monitoring
+        setproctitle(f"eval-{output_folder[:30]}-gpu{gpu_id}")
+
+        logger.info(f"GPU {gpu_id}: Starting queue-based evaluation of {model_name}")
+        logger.info(f"GPU {gpu_id}: Task queue ({len(task_queue)} tasks): {task_queue}")
+
+        # Load model once (reused for all tasks)
+        logger.info(f"GPU {gpu_id}: Loading model...")
+        model, default_batch_size = load_model(
+            model_name,
+            device=device,
+            use_bf16=use_bf16,
+            use_flash_attn=use_flash_attn,
+            truncate_dim=truncate_dim,
+        )
+
+        batch_size = batch_size_override or default_batch_size
+        logger.info(f"GPU {gpu_id}: Model loaded, using batch_size={batch_size}")
+
+        # Process tasks one by one from the queue
+        completed = 0
+        skipped = 0
+        failed = 0
+
+        for idx, task_name in enumerate(task_queue, 1):
+            # Check if already completed
+            if skip_completed and check_task_completed(output_dir, output_folder, task_name):
+                logger.info(f"GPU {gpu_id}: [{idx}/{len(task_queue)}] Skipping '{task_name}' (already completed)")
+                skipped += 1
+                continue
+
+            logger.info(f"GPU {gpu_id}: [{idx}/{len(task_queue)}] Processing '{task_name}'...")
+            start_time = time.time()
+
+            success = evaluate_single_task(
+                model=model,
+                task_name=task_name,
+                output_dir=output_dir,
+                output_folder=output_folder,
+                batch_size=batch_size,
+                gpu_id=gpu_id,
+            )
+
+            elapsed = time.time() - start_time
+
+            if success:
+                completed += 1
+                logger.info(f"GPU {gpu_id}: [{idx}/{len(task_queue)}] '{task_name}' done in {elapsed:.1f}s")
+            else:
+                failed += 1
+                logger.error(f"GPU {gpu_id}: [{idx}/{len(task_queue)}] '{task_name}' failed after {elapsed:.1f}s")
+
+        # Summary
+        logger.info(f"GPU {gpu_id}: Queue completed - {completed} done, {skipped} skipped, {failed} failed")
+
+    except Exception as e:
+        logger.error(f"GPU {gpu_id}: Fatal error: {e}")
+        traceback.print_exc()
+
+
+def evaluate_model(
+    model_name: str,
+    tasks: list[str] | None = None,
+    gpu_ids: list[int] | None = None,
+    output_dir: str = "eval/results",
+    use_bf16: bool = True,
+    use_flash_attn: bool = True,
+    truncate_dim: int | None = None,
+    batch_size: int | None = None,
+    skip_completed: bool = True,
+) -> None:
+    """
+    Evaluate a model on Korean retrieval tasks using multiple GPUs.
+
+    Each GPU processes its task queue sequentially (one task at a time).
+    Multiple GPUs work in parallel on their respective queues.
+
+    Args:
+        model_name: HuggingFace model name or local path
+        tasks: List of task names (None = all tasks)
+        gpu_ids: List of GPU IDs to use (None = use all mapped GPUs)
+        output_dir: Base output directory for results
+        use_bf16: Whether to use bfloat16 precision
+        use_flash_attn: Whether to use flash attention 2
+        truncate_dim: MRL truncation dimension (None = full dimension)
+        batch_size: Override batch size from config
+        skip_completed: Skip tasks that already have results
+    """
+    logger.info(f"Starting evaluation for model: {model_name}")
+    logger.info(f"Mode: Queue-based (sequential tasks per GPU, parallel across GPUs)")
+
+    if gpu_ids is None:
+        gpu_ids = list(TASK_GPU_MAPPING.keys())
+
+    # Create output directory
+    os.makedirs(output_dir, exist_ok=True)
+
+    processes = []
+
+    for gpu_id in gpu_ids:
+        gpu_tasks = get_tasks_for_gpu(gpu_id, tasks)
+
+        if not gpu_tasks:
+            logger.info(f"GPU {gpu_id}: No tasks in queue, skipping")
+            continue
+
+        p = Process(
+            target=evaluate_model_on_gpu_queue,
+            args=(
+                model_name,
+                gpu_id,
+                gpu_tasks,
+                output_dir,
+                use_bf16,
+                use_flash_attn,
+                truncate_dim,
+                batch_size,
+                skip_completed,
+            ),
+        )
+        p.start()
+        processes.append((gpu_id, p))
+        logger.info(f"Started GPU {gpu_id} process with queue of {len(gpu_tasks)} tasks")
+
+    # Wait for all processes to complete
+    for gpu_id, p in processes:
+        p.join()
+        logger.info(f"GPU {gpu_id} process finished")
+
+    logger.info(f"Completed evaluation for model: {model_name}")
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Evaluate embedding models on Korean retrieval benchmarks",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Evaluate a model on all tasks using all GPUs (queue-based)
+  python eval/evaluate.py --model BAAI/bge-m3
+
+  # Evaluate with specific tasks
+  python eval/evaluate.py --model BAAI/bge-m3 --tasks BelebeleRetrieval NanoFEVERKo
+
+  # Evaluate with MRL truncation
+  python eval/evaluate.py --model jinaai/jina-embeddings-v3 --dim 256
+
+  # Evaluate on specific GPU
+  python eval/evaluate.py --model BAAI/bge-m3 --gpu 0
+
+  # Force re-evaluation (don't skip completed tasks)
+  python eval/evaluate.py --model BAAI/bge-m3 --no_skip
+
+  # Disable optimizations
+  python eval/evaluate.py --model BAAI/bge-m3 --no_bf16 --no_flash_attn
+
+  # List available tasks
+  python eval/evaluate.py --list_tasks
+        """,
+    )
+
+    parser.add_argument(
+        "--model",
+        type=str,
+        help="HuggingFace model name or local path",
+    )
+    parser.add_argument(
+        "--tasks",
+        type=str,
+        nargs="+",
+        default=None,
+        help="Task names to evaluate (default: all tasks)",
+    )
+    parser.add_argument(
+        "--gpu",
+        type=int,
+        default=None,
+        help="Specific GPU ID to use (default: use all GPUs with task distribution)",
+    )
+    parser.add_argument(
+        "--dim",
+        type=int,
+        default=None,
+        help="MRL truncate dimension (default: full dimension)",
+    )
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=None,
+        help="Override batch size from model config",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default="eval/results",
+        help="Output directory for results (default: eval/results)",
+    )
+    parser.add_argument(
+        "--no_bf16",
+        action="store_true",
+        help="Disable bfloat16 precision",
+    )
+    parser.add_argument(
+        "--no_flash_attn",
+        action="store_true",
+        help="Disable flash attention 2",
+    )
+    parser.add_argument(
+        "--no_skip",
+        action="store_true",
+        help="Don't skip completed tasks (force re-evaluation)",
+    )
+    parser.add_argument(
+        "--list_tasks",
+        action="store_true",
+        help="List all available tasks and exit",
+    )
+    parser.add_argument(
+        "--list_models",
+        action="store_true",
+        help="List all configured models and exit",
+    )
+
+    return parser.parse_args()
+
+
+def list_tasks() -> None:
+    """Print all available tasks."""
+    print("\n" + "=" * 60)
+    print("Available Evaluation Tasks")
+    print("=" * 60)
+
+    print("\nMTEB Korean Retrieval Tasks:")
+    for i, task in enumerate(MTEB_TASKS, 1):
+        print(f"  {i:2d}. {task}")
+
+    print(f"\nNanoBEIR-ko Tasks ({len(NANOBEIR_KO_TASK_NAMES)} subsets):")
+    for i, task in enumerate(NANOBEIR_KO_TASK_NAMES, 1):
+        print(f"  {i:2d}. {task}")
+
+    print(f"\nTotal: {len(MTEB_TASKS) + len(NANOBEIR_KO_TASK_NAMES)} tasks")
+
+    print("\nGPU Task Queues:")
+    for gpu_id, tasks in TASK_GPU_MAPPING.items():
+        print(f"  GPU {gpu_id}: {len(tasks)} tasks")
+        for idx, task in enumerate(tasks, 1):
+            print(f"    {idx}. {task}")
+
+    print("=" * 60 + "\n")
+
+
+def list_models() -> None:
+    """Print all configured models."""
+    from eval.models.config import MODEL_CONFIGS
+
+    print("\n" + "=" * 60)
+    print("Configured Models")
+    print("=" * 60)
+
+    for name, config in MODEL_CONFIGS.items():
+        mrl_info = ""
+        if config.supports_mrl:
+            mrl_info = f" [MRL: {config.mrl_dims}]"
+
+        flash_info = "flash-attn" if config.supports_flash_attn else "SDPA"
+
+        print(f"\n  {name}")
+        print(f"    batch_size: {config.batch_size}, {flash_info}{mrl_info}")
+
+    print("\n" + "=" * 60 + "\n")
+
+
+def main() -> None:
+    """Main entry point."""
+    args = parse_args()
+
+    if args.list_tasks:
+        list_tasks()
+        return
+
+    if args.list_models:
+        list_models()
+        return
+
+    if not args.model:
+        print("Error: --model is required")
+        print("Use --list_tasks to see available tasks")
+        print("Use --list_models to see configured models")
+        sys.exit(1)
+
+    # Set multiprocessing start method
+    torch.multiprocessing.set_start_method("spawn", force=True)
+
+    # Determine GPU IDs
+    gpu_ids = None
+    if args.gpu is not None:
+        gpu_ids = [args.gpu]
+
+    # Run evaluation
+    evaluate_model(
+        model_name=args.model,
+        tasks=args.tasks,
+        gpu_ids=gpu_ids,
+        output_dir=args.output_dir,
+        use_bf16=not args.no_bf16,
+        use_flash_attn=not args.no_flash_attn,
+        truncate_dim=args.dim,
+        batch_size=args.batch_size,
+        skip_completed=not args.no_skip,
+    )
+
 
 if __name__ == "__main__":
-	torch.multiprocessing.set_start_method('spawn')
-	
-	for model_name in model_names:
-		print(f"Starting evaluation for model: {model_name}")
-		processes = []
-		
-		for gpu_id, tasks in TASK_LIST_RETRIEVAL_GPU_MAPPING.items():
-			p = Process(target=evaluate_model, args=(model_name, gpu_id, tasks))
-			p.start()
-			processes.append(p)
-		
-		for p in processes:
-			p.join()
-		
-		print(f"Completed evaluation for model: {model_name}")
+    main()
