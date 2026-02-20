@@ -47,7 +47,7 @@ logging.getLogger("huggingface_hub").setLevel(logging.WARNING)
 logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
 
 # Import shared GPU task distribution from evaluate.py
-from eval.evaluate import TASK_GPU_MAPPING
+from eval.evaluate import distribute_tasks
 
 
 @dataclass
@@ -285,13 +285,20 @@ def run_pipeline(
         skip_completed: Whether to skip completed tasks
     """
     if gpu_ids is None:
-        gpu_ids = list(TASK_GPU_MAPPING.keys())
+        num_gpus = torch.cuda.device_count()
+        gpu_ids = list(range(num_gpus))
+        logger.info(f"Auto-detected {num_gpus} GPUs: {gpu_ids}")
 
     truncate_dims = truncate_dims or {}
+
+    # Distribute tasks across GPUs
+    task_distribution = distribute_tasks(gpu_ids)
 
     logger.info(f"Pipeline evaluation starting")
     logger.info(f"Models: {models}")
     logger.info(f"GPUs: {gpu_ids}")
+    for gid, gtasks in task_distribution.items():
+        logger.info(f"GPU {gid}: {len(gtasks)} tasks assigned")
 
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
@@ -307,7 +314,7 @@ def run_pipeline(
     for model_name in models:
         truncate_dim = truncate_dims.get(model_name)
         for gpu_id in gpu_ids:
-            tasks = TASK_GPU_MAPPING.get(gpu_id, [])
+            tasks = task_distribution.get(gpu_id, [])
             for task_name in tasks:
                 job = EvalJob(
                     model_name=model_name,

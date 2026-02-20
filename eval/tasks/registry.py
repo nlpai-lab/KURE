@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 # MTEB built-in Korean Retrieval tasks
 MTEB_TASKS = [
     "BelebeleRetrieval",
-    "XPQARetrieval",
     "MultiLongDocRetrieval",
     "Ko-StrategyQA",
     "AutoRAGRetrieval",

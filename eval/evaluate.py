@@ -2,7 +2,7 @@
 KURE Evaluation System
 
 Benchmarking embedding models on Korean retrieval tasks including:
-- MTEB Korean Retrieval tasks (8 tasks)
+- MTEB Korean Retrieval tasks (9 tasks)
 - NanoBEIR-ko tasks (13 subsets)
 
 Features:
@@ -36,7 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from eval.models.loader import load_model, get_output_folder
 from eval.models.config import get_model_config
-from eval.tasks.registry import get_all_tasks, get_task_names, MTEB_TASKS, NANOBEIR_KO_TASK_NAMES
+from eval.tasks.registry import get_all_tasks, get_task_names, ALL_TASK_NAMES, MTEB_TASKS, NANOBEIR_KO_TASK_NAMES
 
 logging.basicConfig(
     level=logging.INFO,
@@ -50,55 +50,52 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 logging.getLogger("huggingface_hub").setLevel(logging.WARNING)
 logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
 
-# GPU task distribution balanced by corpus size and compute requirements
-# Total: 8 MTEB + 13 NanoBEIR-ko = 21 tasks across 3 GPUs
-TASK_GPU_MAPPING = {
-    0: [
-        # MTEB tasks (smaller corpora)
-        "BelebeleRetrieval",
-        "Ko-StrategyQA",
-        "AutoRAGRetrieval",
-        "PublicHealthQA",
-		# "XPQARetrieval",
-		"LawIRKo",
-        "MultiLongDocRetrieval",
-        # NanoBEIR-ko tasks
-        "NanoArguAnaKo",
-        "NanoClimateFEVERKo",
-        "NanoDBPediaKo",
-        "NanoFEVERKo",
-		"NanoQuoraRetrievalKo",
-        "NanoSCIDOCSKo",
-        "NanoSciFactKo",
-        "NanoTouche2020Ko",
-    ],
-    1: [
-        # NanoBEIR-ko tasks
-		"NanoFiQA2018Ko",
-        "NanoHotpotQAKo",
-        "NanoMSMARCOKo",
-        "NanoNFCorpusKo",
-        "NanoNQKo",	
-        # MTEB tasks (large corpus)
-        "MIRACLRetrieval",
-    ],
-    2: [
-        # MTEB tasks (large corpora)
-		"SQuADKorV1Retrieval",
-        "MrTidyRetrieval",
-    ],
+# Task weight estimates (higher = slower/larger corpus)
+# Tasks not listed here default to weight 1
+TASK_WEIGHTS: dict[str, int] = {
+    "MIRACLRetrieval": 5,
+    "MrTidyRetrieval": 5,
+    "SQuADKorV1Retrieval": 4,
+    "MultiLongDocRetrieval": 3,
+    "Ko-StrategyQA": 2,
+    "AutoRAGRetrieval": 2,
+    "LawIRKo": 2,
 }
 
 
-def get_tasks_for_gpu(gpu_id: int, requested_tasks: list[str] | None = None) -> list[str]:
-    """Get tasks assigned to a specific GPU, filtered by requested tasks."""
-    gpu_tasks = TASK_GPU_MAPPING.get(gpu_id, [])
+def distribute_tasks(
+    gpu_ids: list[int],
+    task_names: list[str] | None = None,
+) -> dict[int, list[str]]:
+    """
+    Distribute tasks across GPUs using greedy load-balancing.
 
-    if requested_tasks is None:
-        return gpu_tasks
+    Sorts tasks by weight descending (heaviest first), then assigns each task
+    to the GPU with the lowest current total weight.
 
-    # Filter to only requested tasks
-    return [t for t in gpu_tasks if t in requested_tasks]
+    Args:
+        gpu_ids: List of GPU IDs to distribute across.
+        task_names: Specific task names to distribute. If None, uses all 22 tasks.
+
+    Returns:
+        Dict mapping gpu_id → list of task names.
+    """
+    tasks = task_names or list(ALL_TASK_NAMES)
+
+    # Sort tasks by weight descending (heaviest first for better balancing)
+    sorted_tasks = sorted(tasks, key=lambda t: TASK_WEIGHTS.get(t, 1), reverse=True)
+
+    # Initialize GPU buckets
+    assignment: dict[int, list[str]] = {gpu_id: [] for gpu_id in gpu_ids}
+    gpu_load: dict[int, int] = {gpu_id: 0 for gpu_id in gpu_ids}
+
+    # Greedy: assign each task to the GPU with the lowest current load
+    for task in sorted_tasks:
+        lightest_gpu = min(gpu_ids, key=lambda g: gpu_load[g])
+        assignment[lightest_gpu].append(task)
+        gpu_load[lightest_gpu] += TASK_WEIGHTS.get(task, 1)
+
+    return assignment
 
 
 def check_task_completed(output_dir: str, output_folder: str, task_name: str) -> bool:
@@ -297,7 +294,14 @@ def evaluate_model(
     logger.info(f"Mode: Queue-based (sequential tasks per GPU, parallel across GPUs)")
 
     if gpu_ids is None:
-        gpu_ids = list(TASK_GPU_MAPPING.keys())
+        num_gpus = torch.cuda.device_count()
+        gpu_ids = list(range(num_gpus))
+        logger.info(f"Auto-detected {num_gpus} GPUs: {gpu_ids}")
+
+    # Distribute tasks across GPUs
+    task_distribution = distribute_tasks(gpu_ids, tasks)
+    for gid, gtasks in task_distribution.items():
+        logger.info(f"GPU {gid}: {len(gtasks)} tasks assigned")
 
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
@@ -305,7 +309,7 @@ def evaluate_model(
     processes = []
 
     for gpu_id in gpu_ids:
-        gpu_tasks = get_tasks_for_gpu(gpu_id, tasks)
+        gpu_tasks = task_distribution.get(gpu_id, [])
 
         if not gpu_tasks:
             logger.info(f"GPU {gpu_id}: No tasks in queue, skipping")
@@ -353,8 +357,8 @@ Examples:
   # Evaluate with MRL truncation
   python eval/evaluate.py --model jinaai/jina-embeddings-v3 --dim 256
 
-  # Evaluate on specific GPU
-  python eval/evaluate.py --model BAAI/bge-m3 --gpu 0
+  # Evaluate on specific GPUs
+  python eval/evaluate.py --model BAAI/bge-m3 --gpus 0 1
 
   # Force re-evaluation (don't skip completed tasks)
   python eval/evaluate.py --model BAAI/bge-m3 --no_skip
@@ -380,10 +384,11 @@ Examples:
         help="Task names to evaluate (default: all tasks)",
     )
     parser.add_argument(
-        "--gpu",
+        "--gpus",
         type=int,
+        nargs="+",
         default=None,
-        help="Specific GPU ID to use (default: use all GPUs with task distribution)",
+        help="GPU IDs to use (default: auto-detect via CUDA_VISIBLE_DEVICES)",
     )
     parser.add_argument(
         "--dim",
@@ -448,11 +453,16 @@ def list_tasks() -> None:
 
     print(f"\nTotal: {len(MTEB_TASKS) + len(NANOBEIR_KO_TASK_NAMES)} tasks")
 
-    print("\nGPU Task Queues:")
-    for gpu_id, tasks in TASK_GPU_MAPPING.items():
-        print(f"  GPU {gpu_id}: {len(tasks)} tasks")
-        for idx, task in enumerate(tasks, 1):
-            print(f"    {idx}. {task}")
+    # Show example distribution for 2 and 3 GPUs
+    for n_gpus in [2, 3]:
+        example_dist = distribute_tasks(list(range(n_gpus)))
+        print(f"\nExample distribution ({n_gpus} GPUs):")
+        for gpu_id, gpu_tasks in example_dist.items():
+            total_weight = sum(TASK_WEIGHTS.get(t, 1) for t in gpu_tasks)
+            print(f"  GPU {gpu_id}: {len(gpu_tasks)} tasks (weight={total_weight})")
+            for idx, task in enumerate(gpu_tasks, 1):
+                w = TASK_WEIGHTS.get(task, 1)
+                print(f"    {idx}. {task}" + (f" (w={w})" if w > 1 else ""))
 
     print("=" * 60 + "\n")
 
@@ -499,16 +509,11 @@ def main() -> None:
     # Set multiprocessing start method
     torch.multiprocessing.set_start_method("spawn", force=True)
 
-    # Determine GPU IDs
-    gpu_ids = None
-    if args.gpu is not None:
-        gpu_ids = [args.gpu]
-
     # Run evaluation
     evaluate_model(
         model_name=args.model,
         tasks=args.tasks,
-        gpu_ids=gpu_ids,
+        gpu_ids=args.gpus,
         output_dir=args.output_dir,
         use_bf16=not args.no_bf16,
         use_flash_attn=not args.no_flash_attn,

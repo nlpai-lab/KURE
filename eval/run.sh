@@ -37,10 +37,9 @@ echo "Models: ${MODELS[@]}"
 echo "GPUs: $CUDA_VISIBLE_DEVICES"
 echo "=========================================="
 
-# 파이프라인 실행 (GPU별 독립 큐)
+# 파이프라인 실행 (GPU별 독립 큐, GPU 자동 감지)
 uv run python eval/run_pipeline.py \
     --models "${MODELS[@]}" \
-    --gpus 0 1 2 \
     --output_dir eval/results
 
 echo "=========================================="

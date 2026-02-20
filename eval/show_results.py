@@ -36,11 +36,26 @@ def collect_results(results_dir: str = "eval/results"):
                 with open(task_file) as f:
                     data = json.load(f)
 
-                scores = data.get("scores", {}).get("test", [])
-                if not scores:
+                scores_dict = data.get("scores", {})
+
+                # Read both dev and test splits
+                if "dev" in scores_dict and "test" not in scores_dict:
+                    s = scores_dict["dev"][0]
+                elif "test" in scores_dict and "dev" not in scores_dict:
+                    s = scores_dict["test"][0]
+                elif "dev" in scores_dict and "test" in scores_dict:
+                    # Average dev and test
+                    dev_s = scores_dict["dev"][0]
+                    test_s = scores_dict["test"][0]
+                    s = {}
+                    for key in dev_s:
+                        if isinstance(dev_s[key], (int, float)) and key in test_s:
+                            s[key] = (dev_s[key] + test_s[key]) / 2
+                        else:
+                            s[key] = dev_s[key]
+                else:
                     continue
 
-                s = scores[0]
                 task_count += 1
 
                 if "ndcg_at_10" in s:
