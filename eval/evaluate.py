@@ -202,8 +202,8 @@ def evaluate_model_on_gpu_queue(
         # Generate output folder name
         output_folder = get_output_folder(model_name, truncate_dim)
 
-        # Set process title for monitoring
-        setproctitle(f"eval-{output_folder[:30]}-gpu{gpu_id}")
+        # Short model name for process title (e.g., "BAAI/bge-m3" -> "bge-m3")
+        short_model = model_name.split("/")[-1]
 
         logger.info(f"GPU {gpu_id}: Starting queue-based evaluation of {model_name}")
         logger.info(f"GPU {gpu_id}: Task queue ({len(task_queue)} tasks): {task_queue}")
@@ -233,6 +233,7 @@ def evaluate_model_on_gpu_queue(
                 skipped += 1
                 continue
 
+            setproctitle(f"{short_model}--{task_name}")
             logger.info(f"GPU {gpu_id}: [{idx}/{len(task_queue)}] Processing '{task_name}'...")
             start_time = time.time()
 

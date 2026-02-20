@@ -30,6 +30,15 @@ def _is_flash_attn_error(error: Exception) -> bool:
     ])
 
 
+def _apply_bf16(model: mteb.EncoderProtocol, model_name: str) -> None:
+    """Apply bfloat16 to model loaded via mteb.get_model()."""
+    if hasattr(model, "model") and hasattr(model.model, "to"):
+        model.model.to(dtype=torch.bfloat16)
+        logger.info(f"Applied bfloat16 to {model_name}")
+    else:
+        logger.warning(f"Could not apply bf16 to {model_name}: no .model attribute")
+
+
 def _load_sentence_transformer(
     model_name: str,
     device: str | torch.device,
@@ -103,6 +112,8 @@ def load_model(
     try:
         if not is_local and config.custom_prompts is None:
             model = mteb.get_model(model_name, device=device)
+            if use_bf16 and config.supports_bf16:
+                _apply_bf16(model, model_name)
             logger.info(f"Loaded {model_name} via MTEB (prompts auto-configured)")
             return model, config.batch_size
     except Exception as e:

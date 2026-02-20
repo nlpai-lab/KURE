@@ -169,7 +169,6 @@ def gpu_worker(
         device = torch.device(f"cuda:{gpu_id}")
         torch.cuda.set_device(device)
 
-        setproctitle(f"eval-worker-gpu{gpu_id}")
         logger.info(f"GPU {gpu_id}: Worker started")
 
         current_model_name = None
@@ -227,6 +226,8 @@ def gpu_worker(
                 logger.info(f"GPU {gpu_id}: Model loaded, batch_size={current_batch_size}")
 
             # Evaluate task with retry
+            short_model = model_name.split("/")[-1]
+            setproctitle(f"{short_model}--{task_name}")
             logger.info(f"GPU {gpu_id}: Processing '{task_name}' for {model_name}")
             start_time = time.time()
 
