@@ -1,7 +1,7 @@
 {
   "dataset_revision": "main",
   "task_name": "NanoFEVERKo",
-  "mteb_version": "2.7.30",
+  "mteb_version": "2.8.3",
   "scores": {
     "test": [
       {
@@ -161,6 +161,6 @@
       }
     ]
   },
-  "evaluation_time": 19.814592838287354,
+  "evaluation_time": 19.926008462905884,
   "kg_co2_emissions": null
 }

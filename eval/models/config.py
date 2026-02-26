@@ -102,6 +102,22 @@ MODEL_CONFIGS: dict[str, ModelConfig] = {
         default_dim=1024,
         mrl_dims=[32, 64, 128, 256, 512, 768, 1024],
     ),
+	"jinaai/jina-embeddings-v5-text-small": ModelConfig(
+        name="jinaai/jina-embeddings-v5-text-small",
+        batch_size=64,
+        supports_flash_attn=True,  
+        supports_mrl=True,
+        default_dim=1024,
+        mrl_dims=[32, 64, 128, 256, 512, 768, 1024],
+    ),
+	"jinaai/jina-embeddings-v5-text-nano": ModelConfig(
+        name="jinaai/jina-embeddings-v5-text-nano",
+        batch_size=64,
+        supports_flash_attn=True,  
+        supports_mrl=True,
+        default_dim=768,
+        mrl_dims=[32, 64, 128, 256, 512, 768],
+    ),
     "Snowflake/snowflake-arctic-embed-l-v2.0": ModelConfig(
         name="Snowflake/snowflake-arctic-embed-l-v2.0",
         batch_size=64,

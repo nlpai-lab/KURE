@@ -1,7 +1,7 @@
 {
   "dataset_revision": "main",
   "task_name": "NanoHotpotQAKo",
-  "mteb_version": "2.7.30",
+  "mteb_version": "2.8.3",
   "scores": {
     "test": [
       {
@@ -161,6 +161,6 @@
       }
     ]
   },
-  "evaluation_time": 209.31040954589844,
+  "evaluation_time": 206.61272764205933,
   "kg_co2_emissions": null
 }

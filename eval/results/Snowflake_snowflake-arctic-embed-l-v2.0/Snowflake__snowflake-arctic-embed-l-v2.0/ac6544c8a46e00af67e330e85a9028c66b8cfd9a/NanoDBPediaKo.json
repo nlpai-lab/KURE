@@ -1,7 +1,7 @@
 {
   "dataset_revision": "main",
   "task_name": "NanoDBPediaKo",
-  "mteb_version": "2.7.30",
+  "mteb_version": "2.8.3",
   "scores": {
     "test": [
       {
@@ -161,6 +161,6 @@
       }
     ]
   },
-  "evaluation_time": 8.387840270996094,
+  "evaluation_time": 8.517844915390015,
   "kg_co2_emissions": null
 }

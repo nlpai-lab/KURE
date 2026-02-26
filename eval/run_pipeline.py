@@ -96,7 +96,7 @@ def evaluate_single_task_with_retry(
     output_folder: str,
     initial_batch_size: int,
     gpu_id: int,
-    max_retries: int = 3,
+    max_retries: int = 50,
 ) -> tuple[bool, int]:
     """
     Evaluate a single task with OOM retry logic.

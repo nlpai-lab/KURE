@@ -1,7 +1,7 @@
 {
   "dataset_revision": "main",
   "task_name": "NanoTouche2020Ko",
-  "mteb_version": "2.7.30",
+  "mteb_version": "2.8.3",
   "scores": {
     "test": [
       {
@@ -161,6 +161,6 @@
       }
     ]
   },
-  "evaluation_time": 1030.9937586784363,
+  "evaluation_time": 1009.1905825138092,
   "kg_co2_emissions": null
 }

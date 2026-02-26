@@ -1,7 +1,7 @@
 {
   "dataset_revision": "main",
   "task_name": "NanoNQKo",
-  "mteb_version": "2.7.30",
+  "mteb_version": "2.8.3",
   "scores": {
     "test": [
       {
@@ -161,6 +161,6 @@
       }
     ]
   },
-  "evaluation_time": 9.550467729568481,
+  "evaluation_time": 9.553946495056152,
   "kg_co2_emissions": null
 }

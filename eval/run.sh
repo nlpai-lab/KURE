@@ -7,29 +7,32 @@
 # - 완료된 태스크 자동 스킵
 
 MODELS=(
-    "BAAI/bge-m3"
-	"Alibaba-NLP/gte-multilingual-base"
-	"google/embeddinggemma-300m"
-    "nlpai-lab/KURE-v1"
-    "jinaai/jina-embeddings-v3"
-	"dragonkue/snowflake-arctic-embed-l-v2.0-ko"
-	"dragonkue/BGE-m3-ko"
-	"telepix/PIXIE-Rune-v1.0"
-	"intfloat/multilingual-e5-large"
-	"intfloat/multilingual-e5-large-instruct"
-	"intfloat/e5-mistral-7b-instruct"
-	"SamilPwC-AXNode-GenAI/PwC-Embedding_expr"
-	"Snowflake/snowflake-arctic-embed-l-v2.0"
+    # "BAAI/bge-m3"
+	# "Alibaba-NLP/gte-multilingual-base"
+	# "google/embeddinggemma-300m"
+    # "nlpai-lab/KURE-v1"
+    # "jinaai/jina-embeddings-v3"
+	# "dragonkue/snowflake-arctic-embed-l-v2.0-ko"
+	# "dragonkue/BGE-m3-ko"
+	# "telepix/PIXIE-Rune-v1.0"
+	# "intfloat/multilingual-e5-large"
+	# "intfloat/multilingual-e5-large-instruct"
+	# "intfloat/e5-mistral-7b-instruct"
+	# "SamilPwC-AXNode-GenAI/PwC-Embedding_expr"
+	# "Snowflake/snowflake-arctic-embed-l-v2.0"
     "Qwen/Qwen3-Embedding-0.6B"
-	"Qwen/Qwen3-Embedding-4B"
-	"Qwen/Qwen3-Embedding-8B"
-	"nvidia/llama-embed-nemotron-8b"
-	"Alibaba-NLP/gte-Qwen2-7B-instruct"
-	"Alibaba-NLP/gte-Qwen2-1.5B-instruct"
+	# "Qwen/Qwen3-Embedding-4B"
+	# "Qwen/Qwen3-Embedding-8B"
+	# "nvidia/llama-nemotron-embed-1b-v2"
+	# "nvidia/llama-embed-nemotron-8b"
+	# "Alibaba-NLP/gte-Qwen2-1.5B-instruct"
+	# "Alibaba-NLP/gte-Qwen2-7B-instruct"
+	# "jinaai/jina-embeddings-v5-text-small"
+	# "jinaai/jina-embeddings-v5-text-nano"
 )
 
 # GPU 설정 (필요시 수정)
-export CUDA_VISIBLE_DEVICES=1,4,5
+export CUDA_VISIBLE_DEVICES=4
 
 echo "=========================================="
 echo "KURE Pipeline Evaluation"

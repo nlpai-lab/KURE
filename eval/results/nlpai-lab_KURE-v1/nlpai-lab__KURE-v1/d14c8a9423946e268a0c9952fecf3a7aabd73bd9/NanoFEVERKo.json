@@ -60,8 +60,8 @@
         "nauc_ndcg_at_100_std": 0.108565,
         "nauc_ndcg_at_100_diff1": 0.767638,
         "nauc_ndcg_at_1000_max": 0.439803,
-        "nauc_ndcg_at_1000_std": 0.08935,
-        "nauc_ndcg_at_1000_diff1": 0.774652,
+        "nauc_ndcg_at_1000_std": 0.089349,
+        "nauc_ndcg_at_1000_diff1": 0.77465,
         "nauc_map_at_1_max": 0.330942,
         "nauc_map_at_1_std": 0.030342,
         "nauc_map_at_1_diff1": 0.738619,
@@ -161,6 +161,6 @@
       }
     ]
   },
-  "evaluation_time": 20.00695037841797,
+  "evaluation_time": 19.731066703796387,
   "kg_co2_emissions": null
 }

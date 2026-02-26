@@ -1,7 +1,7 @@
 {
   "dataset_revision": "main",
   "task_name": "NanoMSMARCOKo",
-  "mteb_version": "2.7.30",
+  "mteb_version": "2.8.3",
   "scores": {
     "test": [
       {
@@ -161,6 +161,6 @@
       }
     ]
   },
-  "evaluation_time": 5.789660453796387,
+  "evaluation_time": 6.314318418502808,
   "kg_co2_emissions": null
 }

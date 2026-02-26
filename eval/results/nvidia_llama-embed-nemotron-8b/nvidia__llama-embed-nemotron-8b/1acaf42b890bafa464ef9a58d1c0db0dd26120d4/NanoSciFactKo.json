@@ -1,7 +1,7 @@
 {
   "dataset_revision": "main",
   "task_name": "NanoSciFactKo",
-  "mteb_version": "2.7.30",
+  "mteb_version": "2.8.3",
   "scores": {
     "test": [
       {
@@ -40,7 +40,7 @@
         "mrr_at_10": 0.776889,
         "mrr_at_20": 0.776889,
         "mrr_at_100": 0.777386,
-        "mrr_at_1000": 0.77754,
+        "mrr_at_1000": 0.777541,
         "nauc_ndcg_at_1_max": 0.63969,
         "nauc_ndcg_at_1_std": 0.111569,
         "nauc_ndcg_at_1_diff1": 0.802961,
@@ -56,11 +56,11 @@
         "nauc_ndcg_at_20_max": 0.616935,
         "nauc_ndcg_at_20_std": 0.126281,
         "nauc_ndcg_at_20_diff1": 0.827525,
-        "nauc_ndcg_at_100_max": 0.607765,
-        "nauc_ndcg_at_100_std": 0.131165,
+        "nauc_ndcg_at_100_max": 0.60775,
+        "nauc_ndcg_at_100_std": 0.131107,
         "nauc_ndcg_at_100_diff1": 0.825958,
-        "nauc_ndcg_at_1000_max": 0.607973,
-        "nauc_ndcg_at_1000_std": 0.118987,
+        "nauc_ndcg_at_1000_max": 0.607961,
+        "nauc_ndcg_at_1000_std": 0.118924,
         "nauc_ndcg_at_1000_diff1": 0.824639,
         "nauc_map_at_1_max": 0.450626,
         "nauc_map_at_1_std": -0.006873,
@@ -77,11 +77,11 @@
         "nauc_map_at_20_max": 0.57593,
         "nauc_map_at_20_std": 0.084896,
         "nauc_map_at_20_diff1": 0.827809,
-        "nauc_map_at_100_max": 0.575238,
-        "nauc_map_at_100_std": 0.085104,
+        "nauc_map_at_100_max": 0.575234,
+        "nauc_map_at_100_std": 0.085087,
         "nauc_map_at_100_diff1": 0.827709,
-        "nauc_map_at_1000_max": 0.575261,
-        "nauc_map_at_1000_std": 0.0848,
+        "nauc_map_at_1000_max": 0.575258,
+        "nauc_map_at_1000_std": 0.084782,
         "nauc_map_at_1000_diff1": 0.827678,
         "nauc_recall_at_1_max": 0.450626,
         "nauc_recall_at_1_std": -0.006873,
@@ -140,11 +140,11 @@
         "nauc_mrr_at_20_max": 0.648747,
         "nauc_mrr_at_20_std": 0.141125,
         "nauc_mrr_at_20_diff1": 0.815497,
-        "nauc_mrr_at_100_max": 0.648216,
-        "nauc_mrr_at_100_std": 0.14148,
+        "nauc_mrr_at_100_max": 0.648211,
+        "nauc_mrr_at_100_std": 0.141463,
         "nauc_mrr_at_100_diff1": 0.815363,
-        "nauc_mrr_at_1000_max": 0.648296,
-        "nauc_mrr_at_1000_std": 0.14121,
+        "nauc_mrr_at_1000_max": 0.648293,
+        "nauc_mrr_at_1000_std": 0.141192,
         "nauc_mrr_at_1000_diff1": 0.815321,
         "cv_recall_at_1": 0.72,
         "cv_recall_at_3": 0.8,
@@ -161,6 +161,6 @@
       }
     ]
   },
-  "evaluation_time": 264.45494532585144,
+  "evaluation_time": 226.1089153289795,
   "kg_co2_emissions": null
 }

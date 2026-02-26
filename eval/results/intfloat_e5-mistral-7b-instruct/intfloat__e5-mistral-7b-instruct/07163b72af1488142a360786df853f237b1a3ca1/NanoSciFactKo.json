@@ -1,7 +1,7 @@
 {
   "dataset_revision": "main",
   "task_name": "NanoSciFactKo",
-  "mteb_version": "2.7.30",
+  "mteb_version": "2.8.3",
   "scores": {
     "test": [
       {
@@ -161,6 +161,6 @@
       }
     ]
   },
-  "evaluation_time": 365.37419843673706,
+  "evaluation_time": 359.316397190094,
   "kg_co2_emissions": null
 }

@@ -1,7 +1,7 @@
 {
   "dataset_revision": "837028901907a7d419b4ab906f28e011ce1cc824",
   "task_name": "MultiLongDocRetrieval",
-  "mteb_version": "2.7.30",
+  "mteb_version": "2.8.3",
   "scores": {
     "dev": [
       {
@@ -318,6 +318,6 @@
       }
     ]
   },
-  "evaluation_time": 24169.666181087494,
+  "evaluation_time": 23749.235877275467,
   "kg_co2_emissions": null
 }

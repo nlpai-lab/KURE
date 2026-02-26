@@ -1,7 +1,7 @@
 {
   "dataset_revision": "bd5361e486ef4be7052c506adfdf0610d04abbfe",
   "task_name": "LawIRKo",
-  "mteb_version": "2.7.30",
+  "mteb_version": "2.8.3",
   "scores": {
     "test": [
       {
@@ -161,6 +161,6 @@
       }
     ]
   },
-  "evaluation_time": 316.42652654647827,
+  "evaluation_time": 312.5231695175171,
   "kg_co2_emissions": null
 }
