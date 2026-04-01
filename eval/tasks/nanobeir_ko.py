@@ -91,11 +91,20 @@ def _create_nanobeir_ko_task(subset: str) -> type[AbsTaskRetrieval]:
 
             # Corpus: {doc_id: {"text": text, "title": title}}
             corpus = {}
+            empty_count = 0
             for row in corpus_ds:
-                doc_entry = {"text": row["text"]}
-                if "title" in row and row["title"]:
-                    doc_entry["title"] = row["title"]
+                text = row["text"] or ""
+                title = row.get("title") or ""
+                # Skip documents with no text content (causes reshape errors in some models)
+                if not text.strip() and not title.strip():
+                    empty_count += 1
+                    continue
+                doc_entry = {"text": text if text.strip() else title}
+                if title.strip():
+                    doc_entry["title"] = title
                 corpus[str(row["_id"])] = doc_entry
+            if empty_count:
+                logger.warning(f"{self._subset}Ko: Skipped {empty_count} empty documents")
 
             # Qrels: {query_id: {doc_id: relevance_score}}
             # NanoBEIR-ko uses binary relevance (no score column), default to 1
