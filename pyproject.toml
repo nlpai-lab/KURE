@@ -14,3 +14,6 @@ dependencies = [
     "torch==2.8.0",
     "peft>=0.18.1",
 ]
+
+[tool.uv]
+no-build-isolation-package = ["flash-attn"]
