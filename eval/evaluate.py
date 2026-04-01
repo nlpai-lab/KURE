@@ -22,7 +22,7 @@ import os
 import sys
 import time
 import traceback
-from multiprocessing import Process, Queue, current_process
+from multiprocessing import Process, current_process
 from pathlib import Path
 from typing import Any
 
@@ -197,7 +197,6 @@ def evaluate_model_on_gpu_queue(
 		# Set GPU device
 		device = torch.device(f"cuda:{gpu_id}")
 		torch.cuda.set_device(device)
-		os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
 
 		# Generate output folder name
 		output_folder = get_output_folder(model_name, truncate_dim)

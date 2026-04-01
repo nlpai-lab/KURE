@@ -102,7 +102,7 @@ MODEL_CONFIGS: dict[str, ModelConfig] = {
         default_dim=1024,
         mrl_dims=[32, 64, 128, 256, 512, 768, 1024],
     ),
-	"jinaai/jina-embeddings-v5-text-small": ModelConfig(
+    "jinaai/jina-embeddings-v5-text-small": ModelConfig(
         name="jinaai/jina-embeddings-v5-text-small",
         batch_size=64,
         supports_flash_attn=True,  
@@ -110,7 +110,7 @@ MODEL_CONFIGS: dict[str, ModelConfig] = {
         default_dim=1024,
         mrl_dims=[32, 64, 128, 256, 512, 768, 1024],
     ),
-	"jinaai/jina-embeddings-v5-text-nano": ModelConfig(
+    "jinaai/jina-embeddings-v5-text-nano": ModelConfig(
         name="jinaai/jina-embeddings-v5-text-nano",
         batch_size=64,
         supports_flash_attn=True,  
@@ -237,6 +237,23 @@ MODEL_CONFIGS: dict[str, ModelConfig] = {
         batch_size=4,
         supports_flash_attn=True,  # LLaMA architecture
         # prompts: HuggingFace config에서 자동 로드 (instruction)
+    ),
+    # === Microsoft Harrier Models ===
+    "microsoft/harrier-oss-v1-0.6b": ModelConfig(
+        name="microsoft/harrier-oss-v1-0.6b",
+        batch_size=64,
+        supports_flash_attn=True,
+        custom_prompts={
+            PromptType.query.value: "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: ",
+        },
+    ),
+    "microsoft/harrier-oss-v1-270m": ModelConfig(
+        name="microsoft/harrier-oss-v1-270m",
+        batch_size=128,
+        supports_flash_attn=True,
+        custom_prompts={
+            PromptType.query.value: "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: ",
+        },
     ),
     # === Other Models ===
     "SamilPwC-AXNode-GenAI/PwC-Embedding_expr": ModelConfig(

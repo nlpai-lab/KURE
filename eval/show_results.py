@@ -51,14 +51,7 @@ def collect_results(results_dir: str = "eval/results"):
                 elif "test" in scores_dict and "dev" not in scores_dict:
                     s = scores_dict["test"][0]
                 elif "dev" in scores_dict and "test" in scores_dict:
-                    dev_s = scores_dict["dev"][0]
-                    test_s = scores_dict["test"][0]
-                    s = {}
-                    for key in dev_s:
-                        if isinstance(dev_s[key], (int, float)) and key in test_s:
-                            s[key] = (dev_s[key] + test_s[key]) / 2
-                        else:
-                            s[key] = dev_s[key]
+                    s = scores_dict["test"][0]
                 else:
                     continue
 
@@ -114,7 +107,7 @@ def main():
         return
 
     print_table(models, "all", "ALL TASKS")
-    print_table(models, "mteb", "MTEB (non-NanoBEIR)")
+    print_table(models, "mteb", "MTEB")
     print_table(models, "nanobeir", "NanoBEIR")
 
 

@@ -134,7 +134,10 @@ def load_model(
 	# Try to load with MTEB's registered model first (handles prompts automatically)
 	try:
 		if not is_local and config.custom_prompts is None:
-			model = mteb.get_model(model_name, device=device)
+			mteb_kwargs = {}
+			if use_bf16 and config.supports_bf16:
+				mteb_kwargs["model_kwargs"] = {"torch_dtype": torch.bfloat16}
+			model = mteb.get_model(model_name, device=device, **mteb_kwargs)
 			_disable_use_cache(model, model_name)
 			if use_bf16 and config.supports_bf16:
 				_apply_bf16(model, model_name)

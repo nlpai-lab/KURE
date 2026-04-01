@@ -20,7 +20,7 @@ MODELS=(
 	# "intfloat/e5-mistral-7b-instruct"
 	# "SamilPwC-AXNode-GenAI/PwC-Embedding_expr"
 	# "Snowflake/snowflake-arctic-embed-l-v2.0"
-    "Qwen/Qwen3-Embedding-0.6B"
+    # "Qwen/Qwen3-Embedding-0.6B"
 	# "Qwen/Qwen3-Embedding-4B"
 	# "Qwen/Qwen3-Embedding-8B"
 	# "nvidia/llama-nemotron-embed-1b-v2"
@@ -29,6 +29,8 @@ MODELS=(
 	# "Alibaba-NLP/gte-Qwen2-7B-instruct"
 	# "jinaai/jina-embeddings-v5-text-small"
 	# "jinaai/jina-embeddings-v5-text-nano"
+	"microsoft/harrier-oss-v1-0.6b"
+	"microsoft/harrier-oss-v1-270m"
 )
 
 # GPU 설정 (필요시 수정)

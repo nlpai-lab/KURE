@@ -20,11 +20,11 @@ def read_score(d, score_key):
 	"""Read a score from result data, handling dev/test splits."""
 	scores = d.get("scores", {})
 	if "dev" in scores and "test" not in scores:
-		return scores["dev"][0][score_key]
+		return scores["dev"][0].get(score_key)
 	elif "test" in scores and "dev" not in scores:
-		return scores["test"][0][score_key]
+		return scores["test"][0].get(score_key)
 	elif "dev" in scores and "test" in scores:
-		return (scores["dev"][0][score_key] + scores["test"][0][score_key]) / 2
+		return scores["test"][0].get(score_key)
 	return None
 
 
@@ -46,7 +46,7 @@ def app():
 	for task in ALL_TASKS:
 		data[task] = {top_k: [] for top_k in top_k_types}
 
-	root_dir = "results"
+	root_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
 
 	for subdir, dirs, files in os.walk(root_dir):
 		for file in files:
