@@ -255,6 +255,25 @@ MODEL_CONFIGS: dict[str, ModelConfig] = {
             PromptType.query.value: "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: ",
         },
     ),
+    "microsoft/harrier-oss-v1-27b": ModelConfig(
+        name="microsoft/harrier-oss-v1-27b",
+        batch_size=4,
+        supports_flash_attn=True,
+        custom_prompts={
+            PromptType.query.value: "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: ",
+        },
+    ),
+    # === Perplexity Models ===
+    "perplexity-ai/pplx-embed-v1-0.6b": ModelConfig(
+        name="perplexity-ai/pplx-embed-v1-0.6b",
+        batch_size=64,
+        supports_flash_attn=True,
+    ),
+    "perplexity-ai/pplx-embed-v1-4b": ModelConfig(
+        name="perplexity-ai/pplx-embed-v1-4b",
+        batch_size=16,
+        supports_flash_attn=True,
+    ),
     # === Other Models ===
     "SamilPwC-AXNode-GenAI/PwC-Embedding_expr": ModelConfig(
         name="SamilPwC-AXNode-GenAI/PwC-Embedding_expr",
