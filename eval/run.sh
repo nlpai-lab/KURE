@@ -31,14 +31,13 @@ MODELS=(
 	# "jinaai/jina-embeddings-v5-text-nano"
 	# "microsoft/harrier-oss-v1-270m"
 	# "microsoft/harrier-oss-v1-0.6b"
-
 	# "microsoft/harrier-oss-v1-27b"
-	"perplexity-ai/pplx-embed-v1-0.6b"
+	# "perplexity-ai/pplx-embed-v1-0.6b"
 	"perplexity-ai/pplx-embed-v1-4b"
 )
 
 # GPU 설정 (필요시 수정)
-export CUDA_VISIBLE_DEVICES=5,6
+export CUDA_VISIBLE_DEVICES=6,7
 
 echo "=========================================="
 echo "KURE Pipeline Evaluation"
