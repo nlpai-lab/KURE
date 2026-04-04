@@ -28,16 +28,16 @@ MODELS=(
 	# "Alibaba-NLP/gte-Qwen2-1.5B-instruct"
 	# "Alibaba-NLP/gte-Qwen2-7B-instruct"
 	# "jinaai/jina-embeddings-v5-text-small"
-	# "jinaai/jina-embeddings-v5-text-nano"
+	# "jinaai/jina-embeddings-v5-text-nano"	
+	# "perplexity-ai/pplx-embed-v1-0.6b"
+	# "perplexity-ai/pplx-embed-v1-4b"
 	# "microsoft/harrier-oss-v1-270m"
 	# "microsoft/harrier-oss-v1-0.6b"
 	# "microsoft/harrier-oss-v1-27b"
-	# "perplexity-ai/pplx-embed-v1-0.6b"
-	"perplexity-ai/pplx-embed-v1-4b"
 )
 
 # GPU 설정 (필요시 수정)
-export CUDA_VISIBLE_DEVICES=6,7
+export CUDA_VISIBLE_DEVICES=1
 
 echo "=========================================="
 echo "KURE Pipeline Evaluation"
