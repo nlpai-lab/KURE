@@ -34,10 +34,11 @@ MODELS=(
 	# "microsoft/harrier-oss-v1-270m"
 	# "microsoft/harrier-oss-v1-0.6b"
 	# "microsoft/harrier-oss-v1-27b"
+	# "voyageai/voyage-4-nano"
 )
 
 # GPU 설정 (필요시 수정)
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
 
 echo "=========================================="
 echo "KURE Pipeline Evaluation"

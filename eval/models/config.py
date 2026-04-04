@@ -274,6 +274,16 @@ MODEL_CONFIGS: dict[str, ModelConfig] = {
         batch_size=16,
         supports_flash_attn=True,
     ),
+    # === Voyage Models ===
+    "voyageai/voyage-4-nano": ModelConfig(
+        name="voyageai/voyage-4-nano",
+        batch_size=64,
+        supports_flash_attn=True,
+        custom_prompts={
+            PromptType.query.value: "Represent the query for retrieving supporting documents: ",
+            PromptType.document.value: "Represent the document for retrieval: ",
+        },
+    ),
     # === Other Models ===
     "SamilPwC-AXNode-GenAI/PwC-Embedding_expr": ModelConfig(
         name="SamilPwC-AXNode-GenAI/PwC-Embedding_expr",
