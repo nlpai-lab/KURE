@@ -206,18 +206,21 @@ streamlit run leaderboard.py
 ## Citation
 If you find our paper or models helpful, please consider cite as follows:
 ```text
-@misc{KURE,
-  publisher = {Youngjoon Jang, Junyoung Son, Taemin Lee},
-  year = {2024},
-  url = {https://github.com/nlpai-lab/KURE}
+@inproceedings{jang2025kure,
+  title={KURE: Embedding Model for Korean-Specific Retrieval},
+  author={Jang, Youngjoon and Son, Junyoung and Lee, Taemin and Hong, Seongtae and Park, JeongBae and Lim, Heuiseok},
+  booktitle={Annual Conference on Human and Language Technology},
+  pages={129--134},
+  year={2025},
+  organization={Human and Language Technology}
 },
 
-@misc{KoE5,
-  author = {NLP & AI Lab and Human-Inspired AI research},
-  title = {KoE5: 한국어 임베딩 성능 향상을 위한 새로운 데이터셋 및 모델},
-  year = {2024},
-  publisher = {Youngjoon Jang, Junyoung Son, Taemin Lee},
-  journal = {GitHub repository},
-  howpublished = {\url{https://drive.google.com/file/d/1wB02XGFH5v18iJYSYB0oJkWFYxH0ftoJ/view}},
+@inproceedings{jang2024koe5,
+  title={KoE5: A New Dataset and Model for Improving Korean Embedding Performance},
+  author={Jang, Youngjoon and Son, Junyoung and Park, Chanjun and Choi, Soonwoo and Lee, Byeonggoo and Lee, Taemin and Lim, Heuiseok},
+  booktitle={Annual Conference on Human and Language Technology},
+  pages={239--244},
+  year={2024},
+  organization={Human and Language Technology}
 }
 ```
