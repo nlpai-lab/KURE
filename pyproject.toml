@@ -7,3 +7,9 @@ dependencies = [
     "mteb>=2.19",
     "pylate",
 ]
+
+[project.optional-dependencies]
+train = [
+    "accelerate",
+    "wandb",
+]

@@ -163,6 +163,8 @@ Average over the nine tasks. Full per-task results are on the official [MTEB Lea
 
 ### KURE-v2
 
+The full two-stage training code is in [`train/late-interaction`](train/late-interaction).
+
 - Built on [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) with a multi-layer projection head (128-d per token, MaxSim scoring); trained with [PyLate](https://github.com/lightonai/pylate).
 - **Stage 1 (PFT)**: large-batch contrastive learning on 20.7M weakly related Korean/English pairs, released as [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised).
 - **Stage 2 (SFT)**: contrastive learning + KL distillation from a reranker teacher on 3.03M triplets with hard negatives and false-negative filtering.
