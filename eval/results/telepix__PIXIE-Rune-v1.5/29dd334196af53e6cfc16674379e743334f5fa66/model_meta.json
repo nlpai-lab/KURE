@@ -1,0 +1,48 @@
+{
+    "loader_kwargs": {
+        "model_prompts": {
+            "query": "query: ",
+            "document": ""
+        }
+    },
+    "name": "telepix/PIXIE-Rune-v1.5",
+    "revision": "29dd334196af53e6cfc16674379e743334f5fa66",
+    "release_date": "2026-04-22",
+    "languages": [
+        "kor-Hang",
+        "eng-Latn"
+    ],
+    "n_parameters": 567754752,
+    "n_active_parameters_override": null,
+    "n_embedding_parameters": 256002048,
+    "memory_usage_mb": 2166.0,
+    "max_tokens": 8192.0,
+    "embed_dim": 1024,
+    "license": "apache-2.0",
+    "open_weights": true,
+    "public_training_code": null,
+    "public_training_data": null,
+    "framework": [
+        "Sentence Transformers",
+        "PyTorch"
+    ],
+    "reference": "https://huggingface.co/telepix/PIXIE-Rune-v1.5",
+    "similarity_fn_name": "cosine",
+    "use_instructions": true,
+    "training_datasets": null,
+    "adapted_from": "Snowflake/snowflake-arctic-embed-l-v2.0",
+    "superseded_by": null,
+    "modalities": [
+        "text"
+    ],
+    "model_type": [
+        "dense"
+    ],
+    "citation": null,
+    "contacts": null,
+    "experiment_kwargs": null,
+    "output_dtypes": null,
+    "extra_requirements_groups": null,
+    "loader": "SentenceTransformerEncoderWrapper",
+    "is_cross_encoder": false
+}
