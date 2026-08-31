@@ -1,17 +1,20 @@
 # /// script
 # requires-python = ">=3.10"
 # dependencies = [
-#     "sentence-transformers>=6.0",
-#     "fast-plaid>=1.6.0",
-#     "faiss-cpu>=1.12.0",
+#     "sentence-transformers==6.0.0",
+#     "fast-plaid==1.6.0.280",
+#     "faiss-cpu==1.15.0",
+#     "flash-maxsim==0.3.0",
 #     "datasets",
-#     "torch>=2.8,<2.9",
+#     "torch==2.8.0",
 #     "mteb>=2.19",
 #     "setproctitle",
 # ]
 # ///
-# torch is pinned to the 2.8 line (cu128 wheels) to match the benchmark stack and to
-# run on CUDA 12.x drivers; newer torch wheels require a CUDA 13 driver.
+# Versions are pinned to the exact stack behind the KURE-v2 model-card figures
+# (torch 2.8.0 cu128 wheels also run on CUDA 12.x drivers). flash-maxsim is the
+# Triton MaxSim kernel used for the exhaustive and rerank scoring there; on CPU
+# the indexes fall back to plain torch.
 """One-command serving experiment for KURE-v2.
 
 Loads a Korean retrieval dataset (BeIR-style: corpus / queries / qrels), encodes it
@@ -292,19 +295,23 @@ def main() -> None:
     results = index.search(q_embs, args.k)
     ndcg = ndcg_at_k(results, qids, qrels, args.k)
 
-    # Latency: serving one query is encode + search, run serially at batch 1.
-    n_timed = min(len(qids), 100)
+    # Latency, benchmark protocol: serving one query is encode + search at batch 1.
+    # Search: 10 warmup queries, then every task query timed once.
+    # Encoding: 5 warmup runs, then 50 timed runs (cycling over the task queries).
     encode_ms, search_ms = [], []
-    for text, emb in list(zip(q_texts, q_embs))[:3]:  # warmup
-        model.encode_query([text], show_progress_bar=False)
+    for emb in q_embs[:10]:
         index.search([emb], args.k)
-    for text, emb in list(zip(q_texts, q_embs))[:n_timed]:
-        t0 = time.perf_counter()
-        model.encode_query([text], show_progress_bar=False)
-        encode_ms.append((time.perf_counter() - t0) * 1000)
+    for emb in q_embs:
         t0 = time.perf_counter()
         index.search([emb], args.k)
         search_ms.append((time.perf_counter() - t0) * 1000)
+    for text in (q_texts * 2)[:5]:
+        model.encode_query([text], show_progress_bar=False)
+    for i in range(50):
+        text = q_texts[i % len(q_texts)]
+        t0 = time.perf_counter()
+        model.encode_query([text], show_progress_bar=False)
+        encode_ms.append((time.perf_counter() - t0) * 1000)
 
     def stats(xs):
         xs = sorted(xs)

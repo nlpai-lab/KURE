@@ -42,13 +42,24 @@ def _to_numpy_docs(doc_embeddings) -> list[np.ndarray]:
 
 
 def _maxsim(query: torch.Tensor, tokens: torch.Tensor, doc_of_tok: torch.Tensor,
-            n_docs: int, chunk: int = 4_000_000) -> torch.Tensor:
+            n_docs: int, cu: torch.Tensor | None = None, max_len: int | None = None,
+            chunk: int = 4_000_000) -> torch.Tensor:
     """Exact MaxSim of one query [Lq, D] against a flat token matrix [T, D].
 
-    For each query token, take the max similarity within each document
-    (scatter-reduce over token->doc ids), then sum over query tokens. Token
-    chunking bounds the [Lq, chunk] similarity buffer on large corpora.
+    On CUDA, when the caller provides cumulative doc offsets (`cu`, int32 [B+1])
+    this dispatches to the flash-maxsim Triton kernel, the same kernel behind the
+    model-card latency figures. Otherwise (CPU, or the kernel is unavailable) it
+    falls back to plain torch: for each query token, take the max similarity
+    within each document (scatter-reduce over token->doc ids), then sum over
+    query tokens; token chunking bounds the [Lq, chunk] similarity buffer.
     """
+    if cu is not None and query.is_cuda:
+        try:
+            from flash_maxsim import flash_maxsim_packed
+
+            return flash_maxsim_packed(query, tokens, cu, max_len)       # [n_docs] fp32
+        except ImportError:
+            pass
     lq = query.shape[0]
     best = torch.full((lq, n_docs), float("-inf"), device=query.device, dtype=query.dtype)
     for start in range(0, tokens.shape[0], chunk):
@@ -74,6 +85,9 @@ class MaxSimIndex:
         lens = torch.tensor([d.shape[0] for d in docs])
         self._tokens = torch.from_numpy(np.vstack(docs)).to(self.device, torch.bfloat16)
         self._doc_of_tok = torch.repeat_interleave(torch.arange(len(docs)), lens).to(self.device)
+        self._cu = torch.zeros(len(docs) + 1, dtype=torch.int32, device=self.device)
+        self._cu[1:] = lens.to(self.device).cumsum(0)
+        self._max_len = int(lens.max())
         self._doc_ids = doc_ids
         self.build_time_s = time.perf_counter() - t0
 
@@ -82,7 +96,8 @@ class MaxSimIndex:
         out = []
         for q in _to_numpy_docs(query_embeddings):
             qt = torch.from_numpy(q).to(self.device, torch.bfloat16)
-            scores = _maxsim(qt, self._tokens, self._doc_of_tok, len(self._doc_ids))
+            scores = _maxsim(qt, self._tokens, self._doc_of_tok, len(self._doc_ids),
+                             cu=self._cu, max_len=self._max_len)
             top = torch.topk(scores, min(k, len(self._doc_ids)))
             out.append(([self._doc_ids[i] for i in top.indices.tolist()],
                         [float(v) for v in top.values.tolist()]))
@@ -151,6 +166,9 @@ class AsymBinaryIndex:
         self._signs = (torch.from_numpy(bits).to(self.device, torch.bfloat16)
                        .mul_(2.0).sub_(1.0))
         self._doc_of_tok = torch.repeat_interleave(torch.arange(len(docs)), lens).to(self.device)
+        self._cu = torch.zeros(len(docs) + 1, dtype=torch.int32, device=self.device)
+        self._cu[1:] = lens.to(self.device).cumsum(0)
+        self._max_len = int(lens.max())
         self._doc_ids = doc_ids
         self.build_time_s = time.perf_counter() - t0
 
@@ -159,7 +177,8 @@ class AsymBinaryIndex:
         out = []
         for q in _to_numpy_docs(query_embeddings):
             qt = torch.from_numpy(q).to(self.device, torch.bfloat16)
-            scores = _maxsim(qt, self._signs, self._doc_of_tok, len(self._doc_ids))
+            scores = _maxsim(qt, self._signs, self._doc_of_tok, len(self._doc_ids),
+                             cu=self._cu, max_len=self._max_len)
             top = torch.topk(scores, min(k, len(self._doc_ids)))
             out.append(([self._doc_ids[i] for i in top.indices.tolist()],
                         [float(v) for v in top.values.tolist()]))
@@ -222,8 +241,11 @@ class PlaidBinaryIndex:
                      .to(self.device, torch.bfloat16).mul_(2.0).sub_(1.0))
             cand_lens = torch.tensor([int(self._offsets[c + 1] - self._offsets[c]) for c in cand])
             doc_of_tok = torch.repeat_interleave(torch.arange(len(cand)), cand_lens).to(self.device)
+            cu = torch.zeros(len(cand) + 1, dtype=torch.int32, device=self.device)
+            cu[1:] = cand_lens.to(self.device).cumsum(0)
             qt = q.to(self.device, torch.bfloat16)
-            scores = _maxsim(qt, signs, doc_of_tok, len(cand))
+            scores = _maxsim(qt, signs, doc_of_tok, len(cand),
+                             cu=cu, max_len=int(cand_lens.max()))
             top = torch.topk(scores, min(k, len(cand)))
             out.append(([self._doc_ids[cand[j]] for j in top.indices.tolist()],
                         [float(v) for v in top.values.tolist()]))
@@ -302,8 +324,11 @@ class BinaryIvfIndex:
                      .to(self.device, torch.bfloat16).mul_(2.0).sub_(1.0))
             cand_lens = torch.tensor([int(self._offsets[c + 1] - self._offsets[c]) for c in cand])
             doc_of_tok = torch.repeat_interleave(torch.arange(len(cand)), cand_lens).to(self.device)
+            cu = torch.zeros(len(cand) + 1, dtype=torch.int32, device=self.device)
+            cu[1:] = cand_lens.to(self.device).cumsum(0)
             qt = torch.from_numpy(q).to(self.device, torch.bfloat16)
-            scores = _maxsim(qt, signs, doc_of_tok, len(cand))
+            scores = _maxsim(qt, signs, doc_of_tok, len(cand),
+                             cu=cu, max_len=int(cand_lens.max()))
             top = torch.topk(scores, min(k, len(cand)))
             out.append(([self._doc_ids[int(cand[j])] for j in top.indices.tolist()],
                         [float(v) for v in top.values.tolist()]))
