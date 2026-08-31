@@ -6,6 +6,8 @@
 #     "faiss-cpu>=1.12.0",
 #     "datasets",
 #     "torch>=2.8,<2.9",
+#     "mteb>=2.19",
+#     "setproctitle",
 # ]
 # ///
 # torch is pinned to the 2.8 line (cu128 wheels) to match the benchmark stack and to
@@ -52,8 +54,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pool", type=int, default=1,
                         help="Hierarchical token pooling factor for documents "
                              "(1 = off; 2/3 shrink the index ~2x/3x).")
-    parser.add_argument("--dataset", default="yjoonjang/markers_bm",
-                        help="BeIR-style HF dataset with corpus/queries/default configs.")
+    parser.add_argument("--dataset", default=None,
+                        help="BeIR-style HF dataset with corpus/queries/default configs; "
+                             "overrides --task when given.")
+    parser.add_argument("--task", default="AutoRAGRetrieval",
+                        help="MTEB retrieval task name (e.g. Ko-StrategyQA, BelebeleRetrieval); "
+                             "loads via mteb with the Korean subset.")
+    parser.add_argument("--split", default=None,
+                        help="Eval split for --task (default: the task's first eval split).")
     parser.add_argument("--qrels-split", default="test")
     parser.add_argument("--k", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=32, help="Encode batch size.")
@@ -76,6 +84,20 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _align(corpus: dict, queries: dict, qrels: dict, limit: int | None):
+    """Drop qrels pointing outside the corpus, queries without qrels; apply --limit."""
+    if limit:
+        doc_ids = list(corpus)[:limit]
+        keep = set(doc_ids)
+        corpus = {d: corpus[d] for d in doc_ids}
+        qrels = {q: {d: s for d, s in docs.items() if d in keep} for q, docs in qrels.items()}
+        qrels = {q: docs for q, docs in qrels.items() if docs}
+        queries = {q: queries[q] for q in list(qrels)[:limit] if q in queries}
+    qrels = {q: docs for q, docs in qrels.items() if q in queries}
+    queries = {q: t for q, t in queries.items() if q in qrels}
+    return corpus, queries, qrels
+
+
 def load_beir(name: str, qrels_split: str, limit: int | None):
     """Return (corpus {id: text}, queries {id: text}, qrels {qid: {did: rel}})."""
     from datasets import load_dataset
@@ -90,17 +112,66 @@ def load_beir(name: str, qrels_split: str, limit: int | None):
     qrels: dict[str, dict[str, int]] = {}
     for r in qrels_ds:
         qrels.setdefault(str(r["query-id"]), {})[str(r["corpus-id"])] = int(r.get("score", 1))
+    return _align(corpus, queries, qrels, limit)
 
-    if limit:
-        doc_ids = list(corpus)[:limit]
-        keep = set(doc_ids)
-        corpus = {d: corpus[d] for d in doc_ids}
-        qrels = {q: {d: s for d, s in docs.items() if d in keep} for q, docs in qrels.items()}
-        qrels = {q: docs for q, docs in qrels.items() if docs}
-        queries = {q: queries[q] for q in list(qrels)[:limit] if q in queries}
-    qrels = {q: docs for q, docs in qrels.items() if q in queries}
-    queries = {q: t for q, t in queries.items() if q in qrels}
-    return corpus, queries, qrels
+
+# Korean hf_subset where an MTEB task is multilingual.
+TASK_SUBSETS = {
+    "BelebeleRetrieval": "kor_Hang-kor_Hang",
+    "PublicHealthQA": "korean",
+    "MIRACLRetrieval": "ko",
+    "MultiLongDocRetrieval": "ko",
+    "MrTidyRetrieval": "korean",
+}
+
+
+def _as_text(row) -> str:
+    if isinstance(row, str):
+        return row
+    title = (row.get("title") or "").strip()
+    text = (row.get("text") or "").strip()
+    return f"{title} {text}".strip() if title else text
+
+
+def _to_id_map(holder) -> dict[str, str]:
+    if isinstance(holder, dict):
+        return {str(doc_id): _as_text(value) for doc_id, value in holder.items()}
+    return {str(row["id"]): _as_text(row) for row in holder}
+
+
+def load_mteb_task(name: str, split: str | None, limit: int | None):
+    """Load one MTEB retrieval task (Korean subset). Returns (corpus, queries, qrels, split).
+
+    mteb exposes retrieval data two ways: everything under task.dataset[subset][split],
+    or task.corpus/queries/relevant_docs keyed the same way. Try both.
+    """
+    import mteb
+
+    task = mteb.get_tasks(tasks=[name], languages=["kor"])[0]
+    task.load_data()
+    split = split or task.metadata.eval_splits[0]
+    subset = TASK_SUBSETS.get(name)
+
+    if getattr(task, "dataset", None):
+        key = subset if (subset and subset in task.dataset) else next(iter(task.dataset))
+        data = task.dataset[key][split]
+        corpus_ds, queries_ds, relevant = data["corpus"], data["queries"], data["relevant_docs"]
+    else:
+        def pick(holder):
+            key = subset if (subset and subset in holder) else next(iter(holder))
+            inner = holder[key]
+            return inner[split] if split in inner else next(iter(inner.values()))
+
+        corpus_ds, queries_ds, relevant = (pick(task.corpus), pick(task.queries),
+                                           pick(task.relevant_docs))
+
+    corpus = _to_id_map(corpus_ds)
+    queries = _to_id_map(queries_ds)
+    qrels = {str(q): {str(d): int(s) for d, s in docs.items() if s > 0}
+             for q, docs in relevant.items()}
+    qrels = {q: docs for q, docs in qrels.items() if docs}
+    corpus, queries, qrels = _align(corpus, queries, qrels, limit)
+    return corpus, queries, qrels, split
 
 
 def ndcg_at_k(results, qids: list[str], qrels: dict, k: int) -> float:
@@ -140,12 +211,21 @@ def build_index(args, device: str):
 
 
 def main() -> None:
+    import faulthandler
+
+    from setproctitle import setproctitle
+
+    faulthandler.enable()  # stack trace on native crashes (SIGSEGV/SIGABRT)
     args = parse_args()
     logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.INFO)
+    # visible in ps/top/nvidia-smi so others on a shared box know a latency
+    # benchmark owns this GPU
+    setproctitle("Latency를 재고 있습니다. 프로세스 올리지 말아주십쇼 ㅠㅠ")
 
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import numpy as np
     import torch
     from sentence_transformers import MultiVectorEncoder
     from sentence_transformers.multi_vector_encoder.modules import HierarchicalTokenPooling
@@ -154,21 +234,52 @@ def main() -> None:
     if args.index_dir is None:
         args.index_dir = str(script_dir / "index")
     device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
-    corpus, queries, qrels = load_beir(args.dataset, args.qrels_split, args.limit)
-    logger.info("dataset=%s: %d documents, %d queries", args.dataset, len(corpus), len(queries))
+    if args.dataset:
+        corpus, queries, qrels = load_beir(args.dataset, args.qrels_split, args.limit)
+        source, source_split = args.dataset, args.qrels_split
+    else:
+        corpus, queries, qrels, split = load_mteb_task(args.task, args.split, args.limit)
+        source, source_split = args.task, split
+    logger.info("%s [%s]: %d documents, %d queries", source, source_split,
+                len(corpus), len(queries))
 
     dtype = torch.bfloat16 if device.startswith("cuda") else torch.float32
     model = MultiVectorEncoder(
         args.model, device=device, trust_remote_code=True,
         model_kwargs={"torch_dtype": dtype, "attn_implementation": "sdpa"},
     )
+    logger.info("model ready on %s", device)
     doc_ids = list(corpus)
-    encode_kwargs = {"batch_size": args.batch_size, "show_progress_bar": True}
-    if args.pool > 1:
-        encode_kwargs["token_pooling"] = HierarchicalTokenPooling(pool_factor=args.pool)
-    doc_embs = model.encode_document([corpus[d] for d in doc_ids], **encode_kwargs)
+
+    # Document embeddings are cached per (model, source, split, pool, limit) so the
+    # index backends can be swapped without re-encoding the corpus. fp16 storage is
+    # lossless for bf16 values in the embeddings' range.
+    tag = f"{args.model.split('/')[-1]}__{source.split('/')[-1]}__{source_split}"
+    tag += f".pool{args.pool}" + (f".limit{args.limit}" if args.limit else "")
+    cache = script_dir / "cache" / f"{tag}.npz"
+    doc_embs = None
+    if cache.exists():
+        z = np.load(cache)
+        if list(z["doc_ids"]) == doc_ids:
+            offs = z["offsets"]
+            # bind once: NpzFile re-reads the whole member on every __getitem__
+            tokens = z["tokens"]
+            doc_embs = [tokens[offs[i]:offs[i + 1]] for i in range(len(offs) - 1)]
+            logger.info("document embeddings from cache: %s", cache.name)
+    if doc_embs is None:
+        encode_kwargs = {"batch_size": args.batch_size, "show_progress_bar": True}
+        if args.pool > 1:
+            encode_kwargs["token_pooling"] = HierarchicalTokenPooling(pool_factor=args.pool)
+        doc_embs = model.encode_document([corpus[d] for d in doc_ids], **encode_kwargs)
+        doc_embs = [t.cpu().to(torch.float16).numpy() for t in doc_embs]
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        lens = np.array([e.shape[0] for e in doc_embs], dtype=np.int64)
+        np.savez(cache, tokens=np.vstack(doc_embs), offsets=np.insert(np.cumsum(lens), 0, 0),
+                 doc_ids=np.array(doc_ids))
+        logger.info("document embeddings cached: %s", cache.name)
 
     index = build_index(args, device)
+    logger.info("building %s index over %d documents", args.index, len(doc_ids))
     index.build(doc_embs, doc_ids)
     logger.info("index=%s built in %.1fs, %.1f MB",
                 args.index, index.build_time_s, index.size_bytes / 1e6)
@@ -202,7 +313,7 @@ def main() -> None:
     enc_mean, enc_p95 = stats(encode_ms)
     sea_mean, sea_p95 = stats(search_ms)
     pool = f" + pool x{args.pool}" if args.pool > 1 else ""
-    print(f"\n=== {args.model} | {args.index}{pool} | {args.dataset} "
+    print(f"\n=== {args.model} | {args.index}{pool} | {source} [{source_split}] "
           f"({len(corpus)} docs, {len(qids)} queries) ===")
     print(f"nDCG@{args.k}:            {ndcg:.4f}")
     print(f"index size:          {index.size_bytes / 1e6:.1f} MB (build {index.build_time_s:.1f}s)")
@@ -215,11 +326,12 @@ def main() -> None:
         import json
 
         out = (Path(args.out) if args.out
-               else script_dir / "results" / f"{args.dataset.split('/')[-1]}.jsonl")
+               else script_dir / "results" / f"{source.split('/')[-1]}.jsonl")
         out.parent.mkdir(parents=True, exist_ok=True)
         record = {
             "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
-            "model": args.model, "dataset": args.dataset, "index": args.index,
+            "model": args.model, "dataset": source, "split": source_split,
+            "index": args.index,
             "pool": args.pool, "nbits": args.nbits, "nprobe": args.nprobe,
             "rerank_depth": args.rerank_depth, "topk_tokens": args.topk_tokens,
             "n_docs": len(corpus), "n_queries": len(qids), "k": args.k,

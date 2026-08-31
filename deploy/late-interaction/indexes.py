@@ -240,12 +240,14 @@ class BinaryIvfIndex:
     """faiss binary-IVF Hamming candidates + exact asymmetric MaxSim rerank."""
 
     def __init__(self, device: str = "cuda", nprobe: int = 32, topk_tokens: int = 128,
-                 rerank_depth: int = 1000, nlist: int | None = None) -> None:
+                 rerank_depth: int = 1000, nlist: int | None = None,
+                 train_max: int = 2_000_000) -> None:
         self.device = device
         self.nprobe = nprobe
         self.topk_tokens = topk_tokens
         self.rerank_depth = rerank_depth
         self.nlist = nlist
+        self.train_max = train_max
         self._ivf = None
         self._packed = None          # uint8 [T, D/8] -- Hamming corpus + rerank source
         self._doc_of_tok = None      # np.int64 [T]
@@ -270,7 +272,11 @@ class BinaryIvfIndex:
         n_tokens = self._packed.shape[0]
         nlist = self.nlist or int(min(65536, max(16, math.isqrt(n_tokens))))
         self._ivf = faiss.IndexBinaryIVF(faiss.IndexBinaryFlat(self._dim), self._dim, nlist)
-        self._ivf.train(self._packed)
+        train = self._packed
+        if n_tokens > self.train_max:  # sample for tractable IVF training on huge corpora
+            sel = np.random.default_rng(0).choice(n_tokens, self.train_max, replace=False)
+            train = np.ascontiguousarray(self._packed[sel])
+        self._ivf.train(train)
         self._ivf.add(self._packed)
         self._ivf.nprobe = self.nprobe
         self.build_time_s = time.perf_counter() - t0

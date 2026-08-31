@@ -33,7 +33,7 @@ index search (bs=1): xx.x ms mean / xx.x ms p95
 end-to-end:          xx.x QPS, xx.x ms p95
 ```
 
-It also appends the same numbers as one JSON line to `results/<dataset>.jsonl` next to the script (config, dataset size, quality, latency, device), so repeated runs accumulate into a comparable log; `results/markers_bm.jsonl` in the repo holds reference runs of every backend on one A100 80GB. `--out <path>` redirects, `--out none` skips.
+It also appends the same numbers as one JSON line to `results/<task>.jsonl` next to the script (config, dataset size, quality, latency, device), so repeated runs accumulate into a comparable log; `results/` in the repo holds reference runs of every backend on the Korean MTEB retrieval tasks, measured on one otherwise-idle A100 80GB. `--out <path>` redirects, `--out none` skips.
 
 ## Backends
 
@@ -49,7 +49,8 @@ It also appends the same numbers as one JSON line to `results/<dataset>.jsonl` n
 
 ## Options
 
-- `--dataset`: any BeIR-style HF dataset with `corpus` / `queries` / `default` (qrels) configs. Default `yjoonjang/markers_bm` (AutoRAG, small enough for a quick pass).
+- `--task`: any Korean MTEB retrieval task (default `AutoRAGRetrieval`, small enough for a quick pass); loads via mteb with the Korean subset. `--split` picks a non-default eval split (e.g. MLDR dev/test).
+- `--dataset`: alternatively, any BeIR-style HF dataset with `corpus` / `queries` / `default` (qrels) configs; overrides `--task`.
 - `--limit N`: cap corpus and query count for a smoke run (e.g. `--limit 100` on CPU).
 - `--device`: defaults to cuda when available. GPU is strongly recommended for encoding.
 - Backend knobs use the benchmark defaults: `--nbits 4` (PLAID), `--nprobe 32`, `--topk-tokens 128`, `--rerank-depth 1000` (binary IVF).
