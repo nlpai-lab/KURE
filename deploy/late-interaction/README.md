@@ -9,7 +9,7 @@ indexes.py  the index backends (exact MaxSim, PLAID, asymmetric binary, binary I
 
 ## Run
 
-No setup: the `# /// script` block at the top of `run.py` declares its own dependencies (sentence-transformers >= 6.0, fast-plaid, faiss-cpu, torch 2.8/cu128), so `uv run deploy/late-interaction/run.py` ignores the project venv and resolves an isolated, cached environment for the script on first run. This is deliberate: the project venv pins pylate, which pins fast-plaid to the 1.4.6.x line, while these measurements use fast-plaid 1.6.0 and the sentence-transformers MultiVectorEncoder encode path, the exact stack behind the model-card numbers.
+No setup: the `# /// script` block at the top of `run.py` declares its own dependencies (sentence-transformers >= 6.0, fast-plaid, faiss-cpu, torch 2.8/cu128), so `uv run deploy/late-interaction/run.py` ignores the project venv and resolves an isolated, cached environment for the script on first run. This is deliberate: the project venv pins pylate, which pins fast-plaid to the 1.4.6.x line, while these measurements use the sentence-transformers MultiVectorEncoder encode path and torch 2.8, matching the model-card measurement stack. One difference: fast-plaid resolves to its latest release (1.7.x), newer than the 1.6.0 behind the model-card figures; quality is identical but its more compact storage format makes the PLAID indexes here about half the size, and the model-card's exhaustive-scan latencies used a custom Triton MaxSim kernel that this dependency-free version replaces with plain torch, so exhaustive scans on the two 1.5M-document corpora are slower here.
 
 ```bash
 uv run deploy/late-interaction/run.py --index maxsim                     # exact MaxSim (quality ceiling)
