@@ -6,7 +6,7 @@
 
 ## Update Logs
 
-- **2026.08.29**: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) released: a Korean-English bilingual **late-interaction (multi-vector)** model, state of the art on the MTEB(kor, v2) retrieval benchmark.
+- 2026.08.29: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) released: a Korean-English bilingual late-interaction (multi-vector) model, state of the art on the MTEB(kor, v2) retrieval benchmark.
 - 2024.12.21: [🤗 KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1) released with the MTEB-ko-retrieval leaderboard.
 - 2024.10.02: [🤗 KoE5](https://huggingface.co/nlpai-lab/KoE5) and [🤗 ko-triplet-v1.0](https://huggingface.co/datasets/nlpai-lab/ko-triplet-v1.0) released.
 
