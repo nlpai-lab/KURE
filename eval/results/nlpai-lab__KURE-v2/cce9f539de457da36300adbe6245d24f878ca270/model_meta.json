@@ -1,0 +1,61 @@
+{
+    "loader_kwargs": {},
+    "name": "nlpai-lab/KURE-v2",
+    "revision": "cce9f539de457da36300adbe6245d24f878ca270",
+    "release_date": "2026-08-17",
+    "languages": [
+        "kor-Hang",
+        "eng-Latn"
+    ],
+    "n_parameters": 153550080,
+    "n_active_parameters_override": null,
+    "n_embedding_parameters": 38401536,
+    "memory_usage_mb": 586.0,
+    "max_tokens": 8192.0,
+    "embed_dim": 128,
+    "license": "apache-2.0",
+    "open_weights": true,
+    "public_training_code": null,
+    "public_training_data": "https://huggingface.co/datasets/lightonai/embeddings-fine-tuning",
+    "framework": [
+        "PyLate",
+        "ColBERT",
+        "safetensors",
+        "Sentence Transformers"
+    ],
+    "reference": "https://huggingface.co/nlpai-lab/KURE-v2",
+    "similarity_fn_name": "MaxSim",
+    "use_instructions": false,
+    "training_datasets": [
+        "QuoraRetrieval",
+        "CQADupstackRetrieval",
+        "DBPedia",
+        "SCIDOCS",
+        "TRECDL2020",
+        "MSMARCO",
+        "FiQA2018",
+        "SciFact",
+        "ClimateFEVER",
+        "FEVER",
+        "TRECDL2019",
+        "HotpotQA",
+        "NQ"
+    ],
+    "adapted_from": "skt/A.X-Encoder-base",
+    "superseded_by": null,
+    "modalities": [
+        "text"
+    ],
+    "model_type": [
+        "late-interaction"
+    ],
+    "citation": null,
+    "contacts": null,
+    "experiment_kwargs": null,
+    "output_dtypes": null,
+    "extra_requirements_groups": [
+        "pylate"
+    ],
+    "loader": "MultiVectorModel",
+    "is_cross_encoder": false
+}

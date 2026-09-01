@@ -1,0 +1,48 @@
+{
+    "loader_kwargs": {
+        "model_prompts": {
+            "query": "query: ",
+            "document": "passage: "
+        }
+    },
+    "name": "nlpai-lab/KoE5",
+    "revision": "bc6d284c60fe5a973e74c1751b92594c9f581213",
+    "release_date": "2024-09-24",
+    "languages": [
+        "kor-Hang",
+        "eng-Latn"
+    ],
+    "n_parameters": 559890432,
+    "n_active_parameters_override": null,
+    "n_embedding_parameters": 256002048,
+    "memory_usage_mb": 2136.0,
+    "max_tokens": 512.0,
+    "embed_dim": 1024,
+    "license": "mit",
+    "open_weights": true,
+    "public_training_code": null,
+    "public_training_data": null,
+    "framework": [
+        "Sentence Transformers",
+        "PyTorch"
+    ],
+    "reference": "https://huggingface.co/nlpai-lab/KoE5",
+    "similarity_fn_name": "cosine",
+    "use_instructions": true,
+    "training_datasets": null,
+    "adapted_from": "intfloat/multilingual-e5-large",
+    "superseded_by": null,
+    "modalities": [
+        "text"
+    ],
+    "model_type": [
+        "dense"
+    ],
+    "citation": null,
+    "contacts": null,
+    "experiment_kwargs": null,
+    "output_dtypes": null,
+    "extra_requirements_groups": null,
+    "loader": "SentenceTransformerEncoderWrapper",
+    "is_cross_encoder": false
+}

@@ -1,0 +1,33 @@
+{
+  "name": "sionic-ai/comsat-embed-ko-8b-preview",
+  "revision": "a5cc22b651c1b2e51cdd8bf671774ae93584f0ab",
+  "release_date": "2026-07-02",
+  "languages": [
+    "kor-Hang",
+    "eng-Latn"
+  ],
+  "n_parameters": 7567295488,
+  "memory_usage_mb": 14433,
+  "max_tokens": 8192,
+  "embed_dim": 4096,
+  "license": "cc-by-nc-4.0",
+  "open_weights": true,
+  "public_training_code": null,
+  "public_training_data": null,
+  "framework": [
+    "Sentence Transformers",
+    "PyTorch",
+    "safetensors"
+  ],
+  "reference": "https://huggingface.co/sionic-ai/comsat-embed-ko-8b-preview",
+  "similarity_fn_name": "cosine",
+  "use_instructions": true,
+  "training_datasets": [],
+  "adapted_from": "Qwen/Qwen3-Embedding-8B",
+  "superseded_by": null,
+  "is_cross_encoder": false,
+  "modalities": [
+    "text"
+  ],
+  "loader": "SentenceTransformerEncoderWrapper"
+}

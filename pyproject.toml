@@ -1,0 +1,15 @@
+[project]
+name = "kure"
+version = "2.0.0"
+description = "KURE: Korea University Retrieval Embedding models"
+requires-python = ">=3.10"
+dependencies = [
+    "mteb>=2.19",
+    "pylate",
+]
+
+[project.optional-dependencies]
+train = [
+    "accelerate",
+    "wandb",
+]
