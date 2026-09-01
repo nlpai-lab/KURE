@@ -237,8 +237,10 @@ class PlaidBinaryIndex:
             codes = np.concatenate([self._packed[self._offsets[c]:self._offsets[c + 1]]
                                     for c in cand])
             bits = np.unpackbits(codes, axis=1)[:, :self._dim]
+            # transfer the uint8 bits first, convert on GPU: converting to bf16 on
+            # the CPU is slow and doubles the bytes over PCIe
             signs = (torch.from_numpy(np.ascontiguousarray(bits))
-                     .to(self.device, torch.bfloat16).mul_(2.0).sub_(1.0))
+                     .to(self.device).to(torch.bfloat16).mul_(2.0).sub_(1.0))
             cand_lens = torch.tensor([int(self._offsets[c + 1] - self._offsets[c]) for c in cand])
             doc_of_tok = torch.repeat_interleave(torch.arange(len(cand)), cand_lens).to(self.device)
             cu = torch.zeros(len(cand) + 1, dtype=torch.int32, device=self.device)
@@ -320,8 +322,10 @@ class BinaryIvfIndex:
             codes = np.concatenate([self._packed[self._offsets[c]:self._offsets[c + 1]]
                                     for c in cand])
             bits = np.unpackbits(codes, axis=1)[:, :self._dim]
+            # transfer the uint8 bits first, convert on GPU: converting to bf16 on
+            # the CPU is slow and doubles the bytes over PCIe
             signs = (torch.from_numpy(np.ascontiguousarray(bits))
-                     .to(self.device, torch.bfloat16).mul_(2.0).sub_(1.0))
+                     .to(self.device).to(torch.bfloat16).mul_(2.0).sub_(1.0))
             cand_lens = torch.tensor([int(self._offsets[c + 1] - self._offsets[c]) for c in cand])
             doc_of_tok = torch.repeat_interleave(torch.arange(len(cand)), cand_lens).to(self.device)
             cu = torch.zeros(len(cand) + 1, dtype=torch.int32, device=self.device)

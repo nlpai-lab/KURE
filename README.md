@@ -6,7 +6,7 @@
 
 ## Update Logs
 
-- **2026.08.29**: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) released: a Korean-English bilingual **late-interaction (multi-vector)** model, state of the art on the MTEB(kor, v2) retrieval benchmark. Leaderboard rebuilt with the latest `mteb`.
+- **2026.08.29**: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) released: a Korean-English bilingual **late-interaction (multi-vector)** model, state of the art on the MTEB(kor, v2) retrieval benchmark.
 - 2024.12.21: [🤗 KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1) released with the MTEB-ko-retrieval leaderboard.
 - 2024.10.02: [🤗 KoE5](https://huggingface.co/nlpai-lab/KoE5) and [🤗 ko-triplet-v1.0](https://huggingface.co/datasets/nlpai-lab/ko-triplet-v1.0) released.
 
@@ -128,7 +128,7 @@ uv run python eval/evaluate.py nlpai-lab/KURE-v2 multi-vector
 uv run python eval/evaluate.py nlpai-lab/KURE-v1 single-vector
 ```
 
-The per-task result files backing the leaderboard are in [`eval/results`](eval/results) (sources documented there), and the table below is regenerated from them:
+The per-task result files backing the leaderboard are in [`eval/results`](eval/results), and the table below is regenerated from them:
 
 ```bash
 uv run python eval/make_leaderboard.py
@@ -166,10 +166,12 @@ Average over the nine tasks. Full per-task results are on the official [MTEB Lea
 The full two-stage training code is in [`train/late-interaction`](train/late-interaction).
 
 - Built on [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) with a multi-layer projection head (128-d per token, MaxSim scoring); trained with [PyLate](https://github.com/lightonai/pylate).
-- **Stage 1 (PFT)**: large-batch contrastive learning on 20.7M weakly related Korean/English pairs, released as [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised).
+- **Stage 1 (PFT)**: large in-batch contrastive learning on 20.7M weakly related Korean/English pairs, released as [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised).
 - **Stage 2 (SFT)**: contrastive learning + KL distillation from a reranker teacher on 3.03M triplets with hard negatives and false-negative filtering.
 
 ### KURE-v1
+
+Training code in [`train/dense`](train/dense).
 
 - Fine-tuned from [BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3) on ~2M Korean query-document-hard-negative(5) pairs.
 - CachedGISTEmbedLoss, batch size 4,096, lr 2e-5, 1 epoch.
@@ -181,7 +183,7 @@ The full two-stage training code is in [`train/late-interaction`](train/late-int
 
 ## Serving
 
-KURE-v2 is a late-interaction model: each document is stored as a set of token vectors, so the practical questions for deployment are index size and search cost. We benchmarked KURE-v2 across ANN backends and compression schemes on the 9 Korean MTEB retrieval tasks, against five single-vector baselines served with faiss HNSW. All numbers are end-to-end: batch-1 query encoding + index search, measured serially on one A100 80GB.
+KURE-v2 is a late-interaction model: each document is stored as a set of token vectors, so the practical questions for deployment are index size and search cost. We benchmarked KURE-v2 across ANN backends and compression schemes on the 9 Korean MTEB retrieval tasks, against five single-vector baselines served with [faiss HNSW](https://faiss.ai/cpp_api/struct/structfaiss_1_1IndexHNSW.html). All numbers are end-to-end: batch-1 query encoding + index search, measured serially on one A100 80GB. Runnable versions of these configurations are in [`deploy/late-interaction`](deploy/late-interaction) (`uv run deploy/late-interaction/run.py --index plaid`).
 
 <p align="center">
   <img src="assets/deploy_overview.png" width="100%" alt="Average nDCG@10 vs. index storage (left) and vs. end-to-end QPS (right)">
@@ -198,7 +200,7 @@ Two things the figures show:
   <img src="assets/bigcorpus_miracl.png" width="70%" alt="MIRACL (1.5M docs): quality, e2e p95 latency, index size">
 </p>
 
-On the largest corpus (MIRACL, ~1.5M documents) an exhaustive 1-bit scan costs O(corpus): p95 climbs to 156 ms, and pooling the tokens 3x only brings it to 74 ms. Generating candidates with faiss BinaryIVF (Hamming search over the same 1-bit index) and re-scoring them with exact asymmetric MaxSim cuts p95 to **38 ms on the same 2.2 GB index, lower tail latency than the 4B-8B single-vector baselines (43 ms) at higher nDCG**. For large collections, use a candidate-generating index (PLAID or BinaryIVF), not an exhaustive scan.
+On the largest corpus (MIRACL, ~1.5M documents) an exhaustive 1-bit scan costs O(corpus): p95 climbs to 156 ms, and pooling the tokens 3x only brings it to 74 ms. Generating candidates with faiss [BinaryIVF](https://faiss.ai/cpp_api/struct/structfaiss_1_1IndexBinaryIVF.html) (Hamming search over the same 1-bit index) and re-scoring them with exact asymmetric MaxSim cuts p95 to **38 ms on the same 2.2 GB index, lower tail latency than the 4B-8B single-vector baselines (43 ms) at higher nDCG**. For large collections, use a candidate-generating index (PLAID or BinaryIVF), not an exhaustive scan.
 
 <details>
 <summary><b>Measurement details</b></summary>

@@ -6,19 +6,19 @@
 
 ## Update Logs
 
-- **2026.08.29**: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) 공개: 한국어-영어 이중언어 **후기 상호작용(다중 벡터)** 모델, MTEB(kor, v2) 검색 벤치마크 최고 성능. 최신 `mteb` 기반으로 리더보드 재구축.
+- **2026.08.29**: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) 공개: 한국어-영어 이중 언어 **Late-Interaction (Multi-Vector)** 모델, MTEB(kor, v2) 검색 벤치마크 최고 성능. 최신 `mteb` 기반으로 리더보드 재구축.
 - 2024.12.21: [🤗 KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1), MTEB-ko-retrieval 리더보드 공개
 - 2024.10.02: [🤗 KoE5](https://huggingface.co/nlpai-lab/KoE5), [🤗 ko-triplet-v1.0](https://huggingface.co/datasets/nlpai-lab/ko-triplet-v1.0) 공개
 
 ## Models
 
-| 모델 | 유형 | 파라미터 | 베이스 모델 |
+| Model | Type | Params | Base model |
 |---|---|---|---|
-| [KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) | 후기 상호작용 (다중 벡터) | 154M | [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) |
-| [KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1) | 밀집 (단일 벡터) | 568M | [BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3) |
-| [KoE5](https://huggingface.co/nlpai-lab/KoE5) | 밀집 (단일 벡터) | 560M | [intfloat/multilingual-e5-large](https://huggingface.co/intfloat/multilingual-e5-large) |
+| [KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) | Late-interaction (multi-vector) | 154M | [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) |
+| [KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1) | Dense (single-vector) | 568M | [BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3) |
+| [KoE5](https://huggingface.co/nlpai-lab/KoE5) | Dense (single-vector) | 560M | [intfloat/multilingual-e5-large](https://huggingface.co/intfloat/multilingual-e5-large) |
 
-KURE-v2는 모든 토큰을 128차원 벡터로 인코딩하고 질의-문서 유사도를 MaxSim으로 계산하여, 단일 벡터 모델이 압축 과정에서 잃는 토큰 수준의 의미를 보존합니다. 최대 8,192 토큰의 문서를 지원하며 별도의 instruction prefix가 필요 없습니다.
+KURE-v2는 모든 토큰을 128차원 벡터로 인코딩하고 질의-문서 유사도를 MaxSim으로 계산하여, Single-Vector 모델이 압축 과정에서 잃는 토큰 수준의 의미를 보존합니다. 최대 8,192 토큰의 문서를 지원하며 별도의 instruction prefix가 필요 없습니다.
 
 ## Environment
 
@@ -30,7 +30,7 @@ uv sync
 
 ## Usage
 
-### KURE-v2 (후기 상호작용)
+### KURE-v2 (Late-Interaction)
 
 <details>
 <summary><b>PyLate</b></summary>
@@ -90,7 +90,7 @@ scores = model.similarity(query_embeddings, document_embeddings)
 
 </details>
 
-### KURE-v1 / KoE5 (밀집)
+### KURE-v1 / KoE5 (Dense, Single-Vector)
 
 <details>
 <summary><b>Sentence-Transformers</b></summary>
@@ -138,26 +138,26 @@ uv run python eval/make_leaderboard.py
 
 9개 태스크 평균입니다. 태스크별 상세 결과는 공식 [MTEB 리더보드](https://mteb-leaderboard.hf.space/benchmark/MTEB(kor%2C%20v2)?types=Retrieval&s.summary=meanTask&d.summary=desc)에서 확인할 수 있습니다.
 
-| 모델 | 유형 | 파라미터 | Avg nDCG@10 | Avg Recall@10 |
+| Model | Type | Params | Avg nDCG@10 | Avg Recall@10 |
 |---|---|---:|---:|---:|
-| **[nlpai-lab/KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2)** | 후기 상호작용 | 154M | **0.8160** | **0.8921** |
-| yjoonjang/colbert-ko-en-v2 | 후기 상호작용 | 149M | 0.8063 | 0.8827 |
-| sionic-ai/comsat-embed-ko-8b-preview | 밀집 | 7.6B | 0.7927 | 0.8876 |
-| lightonai/mLateOn | 후기 상호작용 | 307M | 0.7906 | 0.8740 |
-| Qwen/Qwen3-Embedding-8B | 밀집 | 7.6B | 0.7826 | 0.8815 |
-| Qwen/Qwen3-Embedding-4B | 밀집 | 4.0B | 0.7737 | 0.8753 |
-| microsoft/harrier-oss-v1-27b | 밀집 | 27.0B | 0.7667 | 0.8624 |
-| dragonkue/snowflake-arctic-embed-l-v2.0-ko | 밀집 | 568M | 0.7653 | 0.8609 |
-| codefuse-ai/F2LLM-v2-8B | 밀집 | 7.6B | 0.7638 | 0.8593 |
-| telepix/PIXIE-Rune-v1.5 | 밀집 | 568M | 0.7618 | 0.8596 |
-| **[nlpai-lab/KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1)** | 밀집 | 568M | 0.7616 | 0.8629 |
-| dragonkue/BGE-m3-ko | 밀집 | 568M | 0.7547 | 0.8513 |
-| BAAI/bge-m3 | 밀집 | 568M | 0.7509 | 0.8588 |
-| perplexity-ai/pplx-embed-v1-late-0.6b | 후기 상호작용 | 596M | 0.7381 | 0.8328 |
-| **[nlpai-lab/KoE5](https://huggingface.co/nlpai-lab/KoE5)** | 밀집 | 560M | 0.7337 | 0.8300 |
-| **[nlpai-lab/KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised)** | 후기 상호작용 | 154M | 0.7283 | 0.8268 |
-| dragonkue/colbert-ko-0.1b | 후기 상호작용 | 149M | 0.6776 | 0.7723 |
-| yjoonjang/colbert-ko-v1 | 후기 상호작용 | 149M | 0.6282 | 0.7212 |
+| **[nlpai-lab/KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2)** | Late-interaction | 154M | **0.8160** | **0.8921** |
+| yjoonjang/colbert-ko-en-v2 | Late-interaction | 149M | 0.8063 | 0.8827 |
+| sionic-ai/comsat-embed-ko-8b-preview | Dense | 7.6B | 0.7927 | 0.8876 |
+| lightonai/mLateOn | Late-interaction | 307M | 0.7906 | 0.8740 |
+| Qwen/Qwen3-Embedding-8B | Dense | 7.6B | 0.7826 | 0.8815 |
+| Qwen/Qwen3-Embedding-4B | Dense | 4.0B | 0.7737 | 0.8753 |
+| microsoft/harrier-oss-v1-27b | Dense | 27.0B | 0.7667 | 0.8624 |
+| dragonkue/snowflake-arctic-embed-l-v2.0-ko | Dense | 568M | 0.7653 | 0.8609 |
+| codefuse-ai/F2LLM-v2-8B | Dense | 7.6B | 0.7638 | 0.8593 |
+| telepix/PIXIE-Rune-v1.5 | Dense | 568M | 0.7618 | 0.8596 |
+| **[nlpai-lab/KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1)** | Dense | 568M | 0.7616 | 0.8629 |
+| dragonkue/BGE-m3-ko | Dense | 568M | 0.7547 | 0.8513 |
+| BAAI/bge-m3 | Dense | 568M | 0.7509 | 0.8588 |
+| perplexity-ai/pplx-embed-v1-late-0.6b | Late-interaction | 596M | 0.7381 | 0.8328 |
+| **[nlpai-lab/KoE5](https://huggingface.co/nlpai-lab/KoE5)** | Dense | 560M | 0.7337 | 0.8300 |
+| **[nlpai-lab/KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised)** | Late-interaction | 154M | 0.7283 | 0.8268 |
+| dragonkue/colbert-ko-0.1b | Late-interaction | 149M | 0.6776 | 0.7723 |
+| yjoonjang/colbert-ko-v1 | Late-interaction | 149M | 0.6282 | 0.7212 |
 
 ## Training Details
 
@@ -171,6 +171,8 @@ uv run python eval/make_leaderboard.py
 
 ### KURE-v1
 
+학습 코드는 [`train/dense`](train/dense)에 있습니다.
+
 - [BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3)를 한국어 query-document-hard_negative(5개) 약 200만 쌍으로 fine-tuning.
 - CachedGISTEmbedLoss, 배치 4,096, 학습률 2e-5, 1 에폭.
 
@@ -181,7 +183,7 @@ uv run python eval/make_leaderboard.py
 
 ## Serving
 
-KURE-v2는 후기 상호작용 모델로, 문서를 토큰 벡터의 집합으로 저장하기 때문에 배포에서는 색인 크기와 검색 비용이 실질적인 관건입니다. 9개 한국어 MTEB 검색 태스크에서 KURE-v2를 여러 ANN 백엔드·압축 기법으로, faiss HNSW로 서빙되는 단일 벡터 5종과 함께 벤치마크했습니다. 모든 수치는 종단간(배치 1 질의 인코딩 + 색인 검색)이며 A100 80GB 1대에서 직렬로 측정했습니다.
+KURE-v2는 후기 상호작용 모델로, 문서를 토큰 벡터의 집합으로 저장하기 때문에 배포에서는 색인 크기와 검색 비용이 실질적인 관건입니다. 9개 한국어 MTEB 검색 태스크에서 KURE-v2를 여러 ANN 백엔드·압축 기법으로, [faiss HNSW](https://faiss.ai/cpp_api/struct/structfaiss_1_1IndexHNSW.html)로 서빙되는 단일 벡터 5종과 함께 벤치마크했습니다. 모든 수치는 종단간(배치 1 질의 인코딩 + 색인 검색)이며 A100 80GB 1대에서 직렬로 측정했습니다. 아래 구성들을 직접 실행해볼 수 있는 코드는 [`deploy/late-interaction`](deploy/late-interaction)에 있습니다 (`uv run deploy/late-interaction/run.py --index plaid`).
 
 <p align="center">
   <img src="assets/deploy_overview.png" width="100%" alt="색인 크기 대비(좌) / 종단간 QPS 대비(우) 평균 nDCG@10">
@@ -189,16 +191,16 @@ KURE-v2는 후기 상호작용 모델로, 문서를 토큰 벡터의 집합으�
 
 그림이 보여주는 두 가지:
 
-- 계층적 토큰 풀링(x2)은 0.04의 nDCG 하락으로 색인을 절반으로 줄입니다. 비대칭 이진 양자화(문서 토큰 1-bit, 질의 bf16)는 1.05 하락으로 9.4배 축소합니다. 둘을 결합하면(풀링 x3 + 이진화) 9개 코퍼스 전체 색인이 **1.7 GB로, 모든 단일 벡터 HNSW 색인(13.1-50.0 GB)보다 작으면서도** 최고 단일 벡터 모델보다 높은 품질(79.57 대 79.07)을 유지합니다.
-- 실제 질의는 텍스트로 도착합니다: 4B-8B 단일 벡터 모델은 질의 인코딩에만 38-40 ms를 써서 색인이 아무리 빨라도 약 25 QPS에 고정됩니다. KURE-v2는 13.8 ms(154M)에 인코딩하므로 MUVERA를 제외한 모든 구성이 **43-55 QPS로, 8B 단일 벡터 모델의 약 2배 처리량을 더 높은 품질로** 제공합니다.
+- Hierarchical Token Pooling(x2)은 0.04의 nDCG 하락으로 색인을 절반으로 줄입니다. Asymmetric Binary Quantization (문서 토큰 1-bit, 질의 bf16)는 1.05 하락으로 9.4배 축소합니다. 둘을 결합하면(pooling x3 + Asym. Binary) 9개 코퍼스 전체 색인이 **1.7 GB로, 모든 Single-Vector HNSW 색인(13.1-50.0 GB)보다 작으면서도** 최고 Single-Vector 모델보다 높은 품질(79.57 대 79.07)을 유지합니다.
+- 실제 query는 텍스트로 도착합니다: 4B-8B Single-Vector 모델은 query 인코딩에만 38-40 ms를 써서 색인이 아무리 빨라도 약 25 QPS에 고정됩니다. KURE-v2는 13.8 ms(154M)에 인코딩하므로 MUVERA를 제외한 모든 구성이 **43-55 QPS로, 8B Single-Vector 모델의 약 2배 처리량을 더 높은 품질로** 제공합니다.
 
-### 대규모 문서 집합: 꼬리 지연
+### 대규모 문서 집합에서의 성능, 지연, 인덱스
 
 <p align="center">
   <img src="assets/bigcorpus_miracl.png" width="70%" alt="MIRACL(150만 문서): 품질, 종단간 p95 지연, 색인 크기">
 </p>
 
-가장 큰 코퍼스(MIRACL, 약 150만 문서)에서 전수 1-bit 스캔의 비용은 문서 수에 비례합니다: p95가 156 ms까지 오르고, 토큰을 3배 줄여도 74 ms에 그칩니다. 같은 1-bit 색인 위에서 faiss BinaryIVF(해밍 검색)로 후보를 생성하고 정확한 비대칭 MaxSim으로 재순위화하면 **같은 2.2 GB 색인에서 p95가 38 ms로, 4B-8B 단일 벡터(43 ms)보다 짧은 꼬리 지연을 더 높은 nDCG로** 달성합니다. 대규모 컬렉션에서는 전수 스캔이 아니라 후보 생성형 색인(PLAID 또는 BinaryIVF)을 사용하세요.
+가장 큰 코퍼스(MIRACL, 약 150만 문서)에서 전수 1-bit 스캔의 비용은 문서 수에 비례합니다: p95가 156 ms까지 오르고, 토큰을 3배 줄여도 74 ms에 그칩니다. 같은 1-bit 색인 위에서 faiss [BinaryIVF](https://faiss.ai/cpp_api/struct/structfaiss_1_1IndexBinaryIVF.html) (해밍 검색)로 후보를 생성하고 정확한 비대칭 MaxSim으로 재순위화하면 **같은 2.2 GB 색인에서 p95가 38 ms로, 4B-8B 단일 벡터(43 ms)보다 짧은 꼬리 지연을 더 높은 nDCG로** 달성합니다. 대규모 컬렉션에서는 전수 스캔이 아니라 후보 생성형 색인(PLAID 또는 BinaryIVF)을 사용하세요.
 
 <details>
 <summary><b>측정 상세</b></summary>
