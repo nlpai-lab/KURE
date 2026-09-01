@@ -224,12 +224,12 @@ KURE-v2는 후기 상호작용 모델로, 문서를 토큰 벡터의 집합으�
 
 ## Citation
 
-모델이 도움이 되었다면 다음을 인용해 주세요:
+If you find our models helpful, please consider citing:
 
 ```bibtex
 @misc{kure-v2,
   title  = {KURE-v2: a Korean-English bilingual late-interaction retriever},
-  author = {Youngjoon Jang, Junyoung Son, Taemin Lee, Seongtae Hong, Chanjun Park, Heuiseok Lim},
+  author = {Jang, Youngjoon and Son, Junyoung and Lee, Taemin and Hong, Seongtae and Lim, Heuiseok},
   year   = {2026},
   url    = {https://huggingface.co/nlpai-lab/KURE-v2},
 }
