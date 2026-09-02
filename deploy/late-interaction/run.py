@@ -220,6 +220,14 @@ def main() -> None:
 
     faulthandler.enable()  # stack trace on native crashes (SIGSEGV/SIGABRT)
     args = parse_args()
+    # The index work runs on the GPU; the CPU side is many tiny torch/rayon ops. With the
+    # default pools (one thread per core) those ops spin-wait, and on a shared box under
+    # load a one-minute run can stall for tens of minutes. A small fixed pool keeps the
+    # batch-1 latency stable; must be set before torch is imported.
+    import os
+
+    for var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "RAYON_NUM_THREADS"):
+        os.environ.setdefault(var, "8")
     logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.INFO)
     # visible in ps/top/nvidia-smi so others on a shared box know a latency
     # benchmark owns this GPU

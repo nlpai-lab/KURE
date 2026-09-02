@@ -40,7 +40,7 @@ It also appends the same numbers as one JSON line to `results/<task>.jsonl` next
 | `--index` | What it does | Trade-off |
 |---|---|---|
 | `maxsim` | Exhaustive exact MaxSim over bf16 token vectors | Quality ceiling; largest index, slowest at scale |
-| `plaid` | PLAID (fast-plaid): centroid + 4-bit residual codes, centroid-driven candidate generation | ~10x smaller, near-exact quality |
+| `plaid` | PLAID (fast-plaid): centroid + 4-bit residual codes, centroid-driven candidate generation | ~3x smaller than the bf16 token vectors, near-exact quality |
 | `binary` | Asymmetric binary quantization: documents keep 1 sign bit per dimension, queries stay full precision, scoring is the exact query x {-1,+1} dot | 32x smaller than fp32; exhaustive scan |
 | `plaid-binary` | Two-stage: PLAID (from the original vectors) retrieves `--rerank-depth` candidates, re-scored with the exact asymmetric binary MaxSim | Binary-quality results without the exhaustive scan; stores PLAID index + 1-bit codes |
 | `binary-ivf` | Same 1-bit codes; candidates via faiss binary IVF (Hamming over inverted lists), top candidates re-scored with the exact asymmetric MaxSim | Binary-level size with sublinear search; the query is never quantized in the score that ranks the output |
@@ -57,4 +57,4 @@ It also appends the same numbers as one JSON line to `results/<task>.jsonl` next
 
 ## Relation to the model card numbers
 
-The model card's Serving section reports the same configurations measured under a fixed protocol (9 Korean MTEB retrieval tasks, single A100 80GB, batch-1 serial encode + search, warmup + repeated timed queries). This directory reproduces the mechanics with a lighter protocol on one dataset, so expect the same ordering between methods rather than identical numbers. One caveat at demo scale: on a corpus this small (720 documents) PLAID's centroid store and per-call overhead dominate, so it shows up larger and slower than exhaustive scans here; its size and speed advantages appear on large corpora (see the model card's MIRACL figures).
+The model card's Serving section reports the same configurations measured under a fixed protocol (9 Korean MTEB retrieval tasks, single A100 80GB, batch-1 serial encode + search, warmup + repeated timed queries). This directory reproduces the mechanics with a lighter protocol on one dataset, so expect the same ordering between methods rather than identical numbers. One caveat at demo scale: on a corpus this small (720 documents) PLAID's per-call overhead dominates, so it is slower than the exhaustive scans here even though its index is already ~3x smaller; its speed advantage appears on large corpora (see the model card's MIRACL figures). Reported index sizes are the servable index only: PLAID indexes are frozen after build (`freeze()`, `start_from_scratch=0`), which drops fast-plaid's per-shard build copies and the raw embeddings it otherwise keeps for corpora of <= 1,000 documents.
