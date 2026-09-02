@@ -127,7 +127,12 @@ class PlaidIndex:
         embs = [torch.as_tensor(np.asarray(e, dtype=np.float32)) if not isinstance(e, torch.Tensor)
                 else e.detach().cpu().to(torch.float32) for e in doc_embeddings]
         t0 = time.perf_counter()
-        self._fp.create(documents_embeddings=embs, nbits=self.nbits)
+        # start_from_scratch=0: fast-plaid otherwise keeps the raw fp32 embeddings
+        # (embeddings.npy) for corpora <= 1000 docs to support update(). freeze(): it also
+        # keeps the per-shard codes/residuals next to the merged_*.npy search copy, doubling
+        # the directory. Neither is part of the servable index that size_bytes reports.
+        self._fp.create(documents_embeddings=embs, nbits=self.nbits, start_from_scratch=0)
+        self._fp.freeze()
         self.build_time_s = time.perf_counter() - t0
         self._doc_ids = doc_ids
 
@@ -221,8 +226,10 @@ class PlaidBinaryIndex:
         lens = np.array([d.shape[0] for d in docs], dtype=np.int64)
         self._offsets = np.insert(np.cumsum(lens), 0, 0)
         self._fp = FastPlaid(index=self.index_dir, device=self.device)
+        # start_from_scratch=0 / freeze(): see PlaidIndex.build
         self._fp.create(documents_embeddings=[torch.from_numpy(d) for d in docs],
-                        nbits=self.nbits)
+                        nbits=self.nbits, start_from_scratch=0)
+        self._fp.freeze()
         self._doc_ids = doc_ids
         self.build_time_s = time.perf_counter() - t0
 
