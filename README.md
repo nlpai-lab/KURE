@@ -187,7 +187,9 @@ Training code in [`train/dense`](train/dense).
 
 ## Serving
 
-KURE-v2 is a late-interaction model: each document is stored as a set of token vectors, so the practical questions for deployment are index size and search cost. We benchmarked KURE-v2 across ANN backends and compression schemes on the 9 Korean MTEB retrieval tasks, against five single-vector baselines served with [faiss HNSW](https://faiss.ai/cpp_api/struct/structfaiss_1_1IndexHNSW.html). All numbers are end-to-end: batch-1 query encoding + index search, measured serially on one A100 80GB. Runnable versions of these configurations are in [`deploy/late-interaction`](deploy/late-interaction) (`uv run deploy/late-interaction/run.py --index plaid`).
+KURE-v2 is a late-interaction model: each document is stored as a set of token vectors, so the practical questions for deployment are index size and search cost. We benchmarked KURE-v2 across ANN backends and compression schemes on the 9 Korean MTEB retrieval tasks, against five single-vector baselines served with [faiss HNSW](https://faiss.ai/cpp_api/struct/structfaiss_1_1IndexHNSW.html). All numbers are end-to-end: batch-1 query encoding + index search, measured serially on one A100 80GB.
+
+Runnable versions of these configurations are in [`deploy/late-interaction`](deploy/late-interaction) (`uv run deploy/late-interaction/run.py --index plaid`).
 
 <p align="center">
   <img src="assets/deploy_overview.png" width="100%" alt="Average nDCG@10 vs. index storage (left) and vs. end-to-end QPS (right)">
