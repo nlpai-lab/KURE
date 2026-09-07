@@ -1,5 +1,9 @@
 # 🔎 KURE: Korea University Retrieval Embedding models
 
+<p align="center" width="100%">
+<img src="assets/kure_logo.png" alt="KURE Logo" style="width: 50%;">
+</p>
+
 [English](README.md) | [한국어](README_ko.md)
 
 **KURE** is a family of Korean-English retrieval embedding models developed by the [NLP & AI Lab](http://nlp.korea.ac.kr/) and the [HIAI Institute](http://hiai.korea.ac.kr) at Korea University.
