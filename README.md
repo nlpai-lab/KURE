@@ -195,7 +195,7 @@ KURE-v2 is a late-interaction model: each document is stored as a set of token v
 
 Two things the figures show:
 
-- Hierarchical token pooling (x2) halves the index (24.2 -> 12.5 GB) with no measurable nDCG loss. Asymmetric binary quantization (1-bit document tokens, bf16 queries) shrinks it 4.8x for 0.98. Stacking the two (pooling x3 + binary), the entire 9-corpus index fits in **1.7 GB, smaller than every single-vector HNSW index (7.0-25.4 GB, fp16 vectors)**, while still outscoring the best single-vector model (79.57 vs 79.10).
+- Hierarchical token pooling (x2) halves the index (24.2 -> 12.5 GB) with no measurable nDCG loss. Asymmetric binary quantization (1-bit document tokens, bf16 queries) shrinks it 4.8x for 0.98. Stacking the two (pooling x3 + binary), the entire 9-corpus index fits in **1.7 GB, smaller than every single-vector HNSW index (7.0-25.4 GB, fp16 vectors)**, while still outscoring the best single-vector model.
 - A live query arrives as text: 4B-8B single-vector models spend 38-40 ms encoding it, capping them at ~25 QPS no matter how fast HNSW is. KURE-v2 encodes in 13.8 ms (154M params), so every configuration except MUVERA serves **44-57 QPS, roughly 2x the 8B single-vector models, at higher quality**.
 
 ### Large corpora: tail latency
