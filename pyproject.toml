@@ -5,11 +5,29 @@ description = "KURE: Korea University Retrieval Embedding models"
 requires-python = ">=3.10"
 dependencies = [
     "mteb>=2.19",
-    "pylate",
 ]
 
 [project.optional-dependencies]
+# pylate pins sentence-transformers==5.3.0, older than the >=5.6.1 the KURE-Reranker models need,
+# so late-interaction (KURE-v2) installs into its own environment:
+#   uv sync --extra late-interaction --no-default-groups
+late-interaction = [
+    "pylate",
+]
 train = [
     "accelerate",
+    "datasets",
     "wandb",
 ]
+
+[dependency-groups]
+# installed by default (dense, sparse and cross-encoder models all run on sentence-transformers)
+st = [
+    "sentence-transformers>=5.6.1",
+    # 5.3 (what pylate pins) mis-scores KURE-Reranker-nano; 5.19 drops config._commit_hash, which mteb reads
+    "transformers>=5.5,<5.15",
+]
+
+[tool.uv]
+default-groups = ["st"]
+conflicts = [[{ extra = "late-interaction" }, { group = "st" }]]

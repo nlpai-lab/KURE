@@ -1,0 +1,31 @@
+{
+  "ndcg_at_1": 0.70892,
+  "ndcg_at_5": 0.76515,
+  "ndcg_at_10": 0.80718,
+  "map_at_10": 0.72462,
+  "mrr_at_10": 0.8256259780907668,
+  "recall_at_10": 0.92758,
+  "main_score": 0.80718,
+  "_model": "lightonai/LightOn-rerank-PW-4B",
+  "_task": "MIRACLRetrieval",
+  "_split": "dev",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 23.410684304704603,
+  "pps_batch_size": 16,
+  "pps_sweep": {
+    "8": 22.216267389563967,
+    "16": 23.410684304704603,
+    "32": 22.96578267551447,
+    "64": 20.63162753790451,
+    "128": 17.30931570109963,
+    "256": null
+  },
+  "_pps_n_pairs": 568,
+  "_pps_n_queries": 10,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

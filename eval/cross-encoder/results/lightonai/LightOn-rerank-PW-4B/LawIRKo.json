@@ -1,0 +1,31 @@
+{
+  "ndcg_at_1": 0.61914,
+  "ndcg_at_5": 0.77757,
+  "ndcg_at_10": 0.79384,
+  "map_at_10": 0.74185,
+  "mrr_at_10": 0.7565994636230392,
+  "recall_at_10": 0.95313,
+  "main_score": 0.79384,
+  "_model": "lightonai/LightOn-rerank-PW-4B",
+  "_task": "LawIRKo",
+  "_split": "test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 12.383275481445644,
+  "pps_batch_size": 16,
+  "pps_sweep": {
+    "8": 11.981963850598497,
+    "16": 12.383275481445644,
+    "32": 12.314738182861756,
+    "64": 12.14683575910809,
+    "128": 11.476979696032185,
+    "256": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

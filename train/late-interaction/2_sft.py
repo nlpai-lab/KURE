@@ -14,7 +14,7 @@ modules.py, extracted from lightonai's mdenseon-mlateon training code (Apache-2.
 Data layout: <data-root>/sft_<lang> is a datasets.save_to_disk directory whose rows
 carry `query`, `positive`, `negative_0`..`negative_9`, and `label` columns.
 
-    uv run torchrun --nproc_per_node 8 train/late-interaction/2_sft.py \\
+    uv run --extra late-interaction --extra train --no-default-groups torchrun --nproc_per_node 8 train/late-interaction/2_sft.py \\
         --model-name output/kure-v2-pft/final --data-root /path/to/sft \\
         --run-name kure-v2-sft
 """

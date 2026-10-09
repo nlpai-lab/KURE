@@ -1,0 +1,32 @@
+{
+  "ndcg_at_1": 0.71831,
+  "ndcg_at_5": 0.74104,
+  "ndcg_at_10": 0.7939,
+  "map_at_10": 0.70324,
+  "mrr_at_10": 0.8187979730233251,
+  "recall_at_10": 0.92121,
+  "main_score": 0.7939,
+  "_model": "mixedbread-ai/mxbai-rerank-large-v2",
+  "_task": "MIRACLRetrieval",
+  "_split": "dev",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 104.229328768258,
+  "pps_batch_size": 32,
+  "pps_sweep": {
+    "8": 94.07487340325355,
+    "16": 102.35929341055616,
+    "32": 104.229328768258,
+    "64": 94.64609282831886,
+    "128": 79.59865871899719,
+    "256": 64.35878266764279,
+    "512": null
+  },
+  "_pps_n_pairs": 568,
+  "_pps_n_queries": 10,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

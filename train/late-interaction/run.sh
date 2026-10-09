@@ -13,12 +13,12 @@ SFT_DATA=${2:?$USAGE}
 NPROC=${3:-8}
 DIR=$(cd "$(dirname "$0")" && pwd)
 
-uv run torchrun --nproc_per_node "$NPROC" "$DIR/1_pft.py" \
+uv run --extra late-interaction --extra train --no-default-groups torchrun --nproc_per_node "$NPROC" "$DIR/1_pft.py" \
     --data-root "$PFT_DATA" \
     --head multi \
     --run-name kure-v2-pft
 
-uv run torchrun --nproc_per_node "$NPROC" "$DIR/2_sft.py" \
+uv run --extra late-interaction --extra train --no-default-groups torchrun --nproc_per_node "$NPROC" "$DIR/2_sft.py" \
     --model-name output/kure-v2-pft/final \
     --data-root "$SFT_DATA" \
     --run-name kure-v2-sft

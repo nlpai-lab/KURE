@@ -23,7 +23,7 @@ and useless discriminator.
 Data layout: <data-root>/pft_<lang> is a datasets.save_to_disk directory whose rows
 carry `anchor` and `positive` columns.
 
-    uv run torchrun --nproc_per_node 8 train/late-interaction/1_pft.py \\
+    uv run --extra late-interaction --extra train --no-default-groups torchrun --nproc_per_node 8 train/late-interaction/1_pft.py \\
         --data-root /path/to/pft --head multi --run-name kure-v2-pft
 """
 

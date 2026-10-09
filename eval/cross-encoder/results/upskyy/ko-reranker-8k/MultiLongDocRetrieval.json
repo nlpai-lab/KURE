@@ -1,0 +1,31 @@
+{
+  "ndcg_at_1": 0.4475,
+  "ndcg_at_5": 0.56677,
+  "ndcg_at_10": 0.59754,
+  "map_at_10": 0.5444,
+  "mrr_at_10": 0.5642628968253969,
+  "recall_at_10": 0.7675000000000001,
+  "main_score": 0.59754,
+  "_model": "upskyy/ko-reranker-8k",
+  "_task": "MultiLongDocRetrieval",
+  "_split": "dev+test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 9.24922089897053,
+  "pps_batch_size": 16,
+  "pps_sweep": {
+    "8": 9.21362678889143,
+    "16": 9.24922089897053,
+    "32": 9.23426945202251,
+    "64": 9.156606316948992,
+    "128": 8.891440579256225,
+    "256": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

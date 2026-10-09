@@ -1,0 +1,31 @@
+{
+  "ndcg_at_1": 0.94737,
+  "ndcg_at_5": 0.97943,
+  "ndcg_at_10": 0.97943,
+  "map_at_10": null,
+  "mrr_at_10": null,
+  "recall_at_10": null,
+  "main_score": 0.97943,
+  "_model": "telepix/PIXIE-Spell-Reranker-Preview-0.6B",
+  "_task": "AutoRAGRetrieval",
+  "_split": "test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 49.372569941883086,
+  "pps_batch_size": 32,
+  "pps_sweep": {
+    "8": 47.61261250608607,
+    "16": 49.273787204187606,
+    "32": 49.372569941883086,
+    "64": 47.940028391911724,
+    "128": 45.15888370897514,
+    "256": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

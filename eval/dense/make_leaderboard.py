@@ -1,4 +1,4 @@
-"""Rebuild the README leaderboard table from eval/results.
+"""Rebuild the README leaderboard table from eval/dense/results.
 
 Discovers every model under the results directory, reads its per-task mteb result
 files, applies the MTEB(kor, v2) conventions (Korean subsets only; Belebele =
@@ -7,8 +7,8 @@ markdown table. Model type and parameter count come from each model's
 model_meta.json; models under the nlpai-lab organization are bolded.
 
 Usage:
-    uv run python eval/make_leaderboard.py
-    uv run python eval/make_leaderboard.py --metrics ndcg_at_10 recall_at_10 mrr_at_10
+    uv run python eval/dense/make_leaderboard.py
+    uv run python eval/dense/make_leaderboard.py --metrics ndcg_at_10 recall_at_10 mrr_at_10
 """
 import argparse
 import json

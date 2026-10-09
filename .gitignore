@@ -2,3 +2,4 @@ __pycache__
 .venv/
 .env
 .omc/
+eval/cross-encoder/stage1_pools/

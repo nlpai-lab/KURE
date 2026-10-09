@@ -1,0 +1,33 @@
+{
+  "ndcg_at_1": 0.96467,
+  "ndcg_at_5": 0.98498,
+  "ndcg_at_10": 0.98534,
+  "map_at_10": 0.98036,
+  "mrr_at_10": 0.9869173388094413,
+  "recall_at_10": 0.99983,
+  "main_score": 0.98534,
+  "_model": "BAAI/bge-reranker-v2-m3",
+  "_task": "SQuADKorV1Retrieval",
+  "_split": "test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 271.5760287891741,
+  "pps_batch_size": 32,
+  "pps_sweep": {
+    "8": 181.55098377113285,
+    "16": 252.77547640599857,
+    "32": 271.5760287891741,
+    "64": 252.15697511724724,
+    "128": 213.1636398624195,
+    "256": 173.64552301781828,
+    "512": 140.25368639574702,
+    "1024": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

@@ -1,11 +1,11 @@
 """Evaluate a model on the nine MTEB(kor, v2) retrieval tasks.
 
-Results are written under eval/results/<org__model>/<revision>/, the tree that
-eval/make_leaderboard.py turns into the README leaderboard.
+Results are written under eval/dense/results/<org__model>/<revision>/, the tree that
+eval/dense/make_leaderboard.py turns into the README leaderboard.
 
 Usage:
-    uv run python eval/evaluate.py nlpai-lab/KURE-v2 multi-vector
-    uv run python eval/evaluate.py nlpai-lab/KURE-v1 single-vector
+    uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.py nlpai-lab/KURE-v2 multi-vector
+    uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
 """
 import argparse
 from pathlib import Path
@@ -39,8 +39,8 @@ def main() -> None:
 
     cache = mteb.ResultCache(cache_path=Path(__file__).resolve().parent)
     mteb.evaluate(model, tasks, encode_kwargs={"batch_size": args.batch_size}, cache=cache)
-    print("done; results under eval/results/. Rebuild the table with "
-          "`uv run python eval/make_leaderboard.py`")
+    print("done; results under eval/dense/results/. Rebuild the table with "
+          "`uv run python eval/dense/make_leaderboard.py`")
 
 
 if __name__ == "__main__":

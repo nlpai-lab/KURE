@@ -10,7 +10,8 @@
 
 ## Update Logs
 
-- 2026.08.29: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) released: a Korean-English bilingual late-interaction (multi-vector) model, state of the art on the MTEB(kor, v2) retrieval benchmark.
+- 2026.10.01: [🤗 KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base) and [🤗 KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) released.
+- 2026.08.29: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) released.
 - 2024.12.21: [🤗 KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1) released with the MTEB-ko-retrieval leaderboard.
 - 2024.10.02: [🤗 KoE5](https://huggingface.co/nlpai-lab/KoE5) and [🤗 ko-triplet-v1.0](https://huggingface.co/datasets/nlpai-lab/ko-triplet-v1.0) released.
 
@@ -18,23 +19,51 @@
 
 | Model | Type | Params | Base model |
 |---|---|---|---|
+| [KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base) | Reranker (cross-encoder) | 1.7B | [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B) |
+| [KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) | Reranker (cross-encoder) | 149M | [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) |
 | [KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) | Late-interaction (multi-vector) | 154M | [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) |
 | [KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1) | Dense (single-vector) | 568M | [BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3) |
 | [KoE5](https://huggingface.co/nlpai-lab/KoE5) | Dense (single-vector) | 560M | [intfloat/multilingual-e5-large](https://huggingface.co/intfloat/multilingual-e5-large) |
 
-KURE-v2 encodes every token into a 128-dimensional vector and scores query-document pairs with MaxSim, which preserves token-level semantics that single-vector models compress away. It supports documents up to 8,192 tokens and needs no instruction prefixes.
 
 ## Environment
 
 We use [uv](https://docs.astral.sh/uv/) to manage the environment.
 
 ```bash
-uv sync
+uv sync                                                # dense, sparse and cross-encoder models
+uv sync --extra late-interaction --no-default-groups   # KURE-v2 with PyLate
 ```
+
+PyLate pins `sentence-transformers==5.3.0`, while the KURE-Reranker models need `>=5.6.1`, so the late-interaction stack installs into its own environment.
 
 ## Usage
 
-### KURE-v2 (late-interaction)
+### KURE-Reranker
+
+<details>
+<summary><b>Sentence-Transformers</b></summary>
+
+```python
+from sentence_transformers import CrossEncoder
+
+model = CrossEncoder("nlpai-lab/KURE-Reranker-nano", max_length=8192)
+# model = CrossEncoder("nlpai-lab/KURE-Reranker-base", max_length=8192)
+
+query = "훈민정음은 언제 만들어졌나요?"
+documents = [
+    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
+    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
+    "한라산은 해발 1,947m로 남한에서 가장 높은 산이며 제주도 중앙에 자리한다.",
+]
+
+# Higher is more relevant
+results = model.rank(query, documents, return_documents=True)
+```
+
+</details>
+
+### KURE-v2
 
 <details>
 <summary><b>PyLate</b></summary>
@@ -94,7 +123,7 @@ scores = model.similarity(query_embeddings, document_embeddings)
 
 </details>
 
-### KURE-v1 / KoE5 (dense)
+### KURE-v1 / KoE5
 
 <details>
 <summary><b>Sentence-Transformers</b></summary>
@@ -128,14 +157,14 @@ We evaluate on the nine **MTEB(kor, v2) Retrieval** tasks with the latest [mteb]
 Late-interaction models are measured directly with mteb + PLAID retrieval; dense rows come from the official [MTEB results repository](https://github.com/embeddings-benchmark/results). To evaluate a model yourself, pass its name and paradigm:
 
 ```bash
-uv run python eval/evaluate.py nlpai-lab/KURE-v2 multi-vector
-uv run python eval/evaluate.py nlpai-lab/KURE-v1 single-vector
+uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.py nlpai-lab/KURE-v2 multi-vector
+uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
 ```
 
-The per-task result files backing the leaderboard are in [`eval/results`](eval/results), and the table below is regenerated from them:
+The per-task result files backing the leaderboard are in [`eval/dense/results`](eval/dense/results), and the table below is regenerated from them:
 
 ```bash
-uv run python eval/make_leaderboard.py
+uv run python eval/dense/make_leaderboard.py
 ```
 
 ### MTEB-ko-retrieval Leaderboard
@@ -163,7 +192,56 @@ Average over the nine tasks. Full per-task results are on the official [MTEB Lea
 | dragonkue/colbert-ko-0.1b | Late-interaction | 149M | 0.6776 | 0.7723 |
 | yjoonjang/colbert-ko-v1 | Late-interaction | 149M | 0.6282 | 0.7212 |
 
+### Reranker Leaderboard
+
+Rerankers are evaluated on the same nine tasks with the protocol of [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark): each query's candidates are all of its gold documents plus the BM25 top-50, every model runs in bf16 at up to 8,192 tokens, and we report nDCG@10 with throughput in pairs per second (PPS), measured on one NVIDIA RTX A6000 48GB. To evaluate a reranker yourself:
+
+```bash
+bash eval/cross-encoder/fetch_eval_assets.sh   # once: the BM25 candidate pools
+uv run python eval/cross-encoder/evaluate.py nlpai-lab/KURE-Reranker-nano --speed
+```
+
+The per-task result files are in [`eval/cross-encoder/results`](eval/cross-encoder/results), and the table below is regenerated from them:
+
+```bash
+uv run python eval/cross-encoder/make_leaderboard.py
+```
+
+Mean over the nine tasks. Per-task nDCG@10 and PPS are in the [KURE-Reranker-base model card](https://huggingface.co/nlpai-lab/KURE-Reranker-base#korean-reranking-evaluation).
+
+<p align="center">
+  <img src="assets/reranker_pps_vs_ndcg.png" width="80%" alt="Mean nDCG@10 vs. mean PPS of rerankers on the nine Korean tasks">
+</p>
+
+| Model | Params | Mean nDCG@10 | Mean PPS |
+|---|---:|---:|---:|
+| Qwen/Qwen3-Reranker-8B | 8.2B | 0.9030 | 15.2 |
+| KaLM-Embedding/KaLM-Reranker-V1-Large-R2 | 7.5B | 0.8960 | 25.3 |
+| Qwen/Qwen3-Reranker-4B | 4.0B | 0.8957 | 24.3 |
+| **[nlpai-lab/KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base)** | 1.7B | **0.8849** | 55.1 |
+| **[nlpai-lab/KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano)** | 149M | **0.8808** | **473.7** |
+| zeroentropy/zerank-2-reranker | 4.0B | 0.8695 | 29.4 |
+| lightonai/LightOn-rerank-PW-4B | 4.5B | 0.8664 | 15.0 |
+| mixedbread-ai/mxbai-rerank-large-v2 | 1.5B | 0.8661 | 65.2 |
+| BAAI/bge-reranker-v2-m3 | 568M | 0.8586 | 404.1 |
+| Qwen/Qwen3-Reranker-0.6B | 596M | 0.8577 | 100.2 |
+| nvidia/llama-nemotron-rerank-1b-v2 | 1.2B | 0.8522 | 127.3 |
+| nlpai-lab/LAMAR-600m | 568M | 0.8406 | 408.8 |
+| dragonkue/bge-reranker-v2-m3-ko | 568M | 0.8263 | 401.5 |
+| BAAI/bge-reranker-v2-gemma | 2.5B | 0.8186 | 58.7 |
+| upskyy/ko-reranker-8k | 568M | 0.8085 | 404.0 |
+| Dongjin-kr/ko-reranker | 560M | 0.7950 | 482.8 |
+| telepix/PIXIE-Spell-Reranker-Preview-0.6B | 596M | 0.7806 | 99.6 |
+
 ## Training Details
+
+### KURE-Reranker
+
+Training code in [`train/cross-encoder`](train/cross-encoder).
+
+- Distilled from a Qwen3-Reranker teacher with pointwise MSE on the KURE-v2 SFT data flattened to 33.3M query-document pairs, 1 epoch.
+- **KURE-Reranker-base**: [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B) scored as logit("yes") − logit("no") over the Qwen3-Reranker template; up to 8,192 tokens.
+- **KURE-Reranker-nano**: [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) with a single-logit head; up to 8,192 tokens.
 
 ### KURE-v2
 
@@ -187,42 +265,7 @@ Training code in [`train/dense`](train/dense).
 
 ## Serving
 
-KURE-v2 is a late-interaction model: each document is stored as a set of token vectors, so the practical questions for deployment are index size and search cost. We benchmarked KURE-v2 across ANN backends and compression schemes on the 9 Korean MTEB retrieval tasks, against five single-vector baselines served with [faiss HNSW](https://faiss.ai/cpp_api/struct/structfaiss_1_1IndexHNSW.html). All numbers are end-to-end: batch-1 query encoding + index search, measured serially on one A100 80GB.
-
-Runnable versions of these configurations are in [`deploy/late-interaction`](deploy/late-interaction) (`uv run deploy/late-interaction/run.py --index plaid`).
-
-<p align="center">
-  <img src="assets/deploy_overview.png" width="100%" alt="Average nDCG@10 vs. index storage (left) and vs. end-to-end QPS (right)">
-</p>
-
-Two things the figures show:
-
-- Hierarchical token pooling (x2) halves the index (24.2 -> 12.5 GB) with no measurable nDCG loss. Asymmetric binary quantization (1-bit document tokens, bf16 queries) shrinks it 4.8x for 0.98. Stacking the two (pooling x3 + binary), the entire 9-corpus index fits in **1.7 GB, smaller than every single-vector HNSW index (7.0-25.4 GB, fp16 vectors)**, while still outscoring the best single-vector model.
-- A live query arrives as text: 4B-8B single-vector models spend 38-40 ms encoding it, capping them at ~25 QPS no matter how fast HNSW is. KURE-v2 encodes in 13.8 ms (154M params), so every configuration except MUVERA serves **44-57 QPS, roughly 2x the 8B single-vector models, at higher quality**.
-
-### Large corpora: tail latency
-
-<p align="center">
-  <img src="assets/bigcorpus_miracl.png" width="70%" alt="MIRACL (1.5M docs): quality, e2e p95 latency, index size">
-</p>
-
-On the largest corpus (MIRACL, ~1.5M documents) an exhaustive 1-bit scan costs O(corpus): p95 climbs to 156 ms, and pooling the tokens 3x only brings it to 74 ms. Generating candidates with faiss [BinaryIVF](https://faiss.ai/cpp_api/struct/structfaiss_1_1IndexBinaryIVF.html) (Hamming search over the same 1-bit index) and re-scoring them with exact asymmetric MaxSim cuts p95 to **38 ms on the same 2.2 GB index, lower tail latency than the 4B-8B single-vector baselines (42 ms) at higher nDCG**. For large collections, use a candidate-generating index (PLAID or BinaryIVF), not an exhaustive scan.
-
-<details>
-<summary><b>Measurement details</b></summary>
-
-- **Hardware**: 1x NVIDIA A100 80GB, 2x AMD EPYC 7513 (64 cores), 1.2 TB RAM.
-- **Software**: faiss-cpu 1.15.0, fast-plaid 1.6.0, sentence-transformers 6.0.0, PyTorch 2.8.0.
-- **Protocol**: batch-1, serial. Index-search latency: 10 warmup queries, then every query of the task measured once (QPS = 1/mean). Query-encoding latency: 5 warmup, 50 measured. End-to-end = encoding + search.
-- **Precision**: encoding in bf16; each index stores its own format (HNSW fp16 vectors, PLAID 4-bit residuals, binary 1-bit).
-- **Index size**: the full serialized index on disk (vectors, graph, codebooks; external doc-id mapping excluded). PLAID indexes are frozen (fast-plaid `freeze()`): the merged search-time codes/residuals only, without the per-shard build copies or the raw embeddings fast-plaid keeps for corpora of <= 1,000 documents.
-- **Tasks**: the 9 Korean MTEB retrieval tasks; MLDR is the mean of its dev/test splits; nDCG@10 x100.
-- **HNSW**: `IndexHNSWSQ` with fp16-stored vectors (inner product on L2-normalized embeddings; lossless for the bf16 embeddings), M=32, efConstruction=200, efSearch=64.
-- **PLAID**: nbits=4, all other settings fast-plaid defaults (kmeans_niters=4, n_ivf_probe=8, n_full_scores=4096). nbits=2/1 give 14.2/9.1 GB at 81.40/80.70 nDCG.
-- **MUVERA**: num_repetitions=10, num_simhash_projections=6, final_projection_dimension=8192, exact-MaxSim rerank of the top 1,000.
-- **BinaryIVF**: nlist=floor(sqrt(total tokens)) capped at 65,536, nprobe=32, top-128 Hamming tokens per query token, exact asymmetric-MaxSim rerank of the top 1,000 documents.
-- **Token pooling**: hierarchical (Ward linkage), pool_factor 2-3, documents only.
-</details>
+Index-size and latency benchmarks of KURE-v2 across ANN backends, token pooling and binary quantization, with runnable configurations, are in [`deploy/late-interaction`](deploy/late-interaction).
 
 ## License
 
@@ -231,6 +274,15 @@ On the largest corpus (MIRACL, ~1.5M documents) an exhaustive 1-bit scan costs O
 ## Citation
 
 If you find our models helpful, please consider citing:
+
+```bibtex
+@misc{kure-reranker,
+  title  = {KURE-Reranker: Korean-English bilingual reranking models},
+  author = {Jang, Youngjoon and Hong, Seongtae and Son, Junyoung and Lee, Taemin and Lim, Heuiseok},
+  year   = {2026},
+  url    = {https://huggingface.co/nlpai-lab/KURE-Reranker-base},
+}
+```
 
 ```bibtex
 @misc{kure-v2,

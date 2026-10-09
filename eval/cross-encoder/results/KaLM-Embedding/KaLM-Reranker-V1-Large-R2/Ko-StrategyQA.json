@@ -1,0 +1,32 @@
+{
+  "ndcg_at_1": 0.84291,
+  "ndcg_at_5": 0.86502,
+  "ndcg_at_10": 0.87958,
+  "map_at_10": 0.84868,
+  "mrr_at_10": 0.8842798155298153,
+  "recall_at_10": 0.92487,
+  "main_score": 0.87958,
+  "_model": "KaLM-Embedding/KaLM-Reranker-V1-Large-R2",
+  "_task": "Ko-StrategyQA",
+  "_split": "dev",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 28.648650722971546,
+  "pps_batch_size": 16,
+  "pps_sweep": {
+    "8": 27.703018026773805,
+    "16": 28.648650722971546,
+    "32": 26.728288594596236,
+    "64": 22.54040710163928,
+    "128": 17.866525094907963,
+    "256": 10.832480275404512,
+    "512": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "sdpa",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

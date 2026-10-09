@@ -1,5 +1,7 @@
 # Serving KURE-v2
 
+[English](README.md) | [한국어](README_ko.md)
+
 Runnable versions of the serving configurations benchmarked in the [KURE-v2 model card](https://huggingface.co/nlpai-lab/KURE-v2): encode a Korean retrieval dataset, build an index, and get quality + latency + index size in one command.
 
 ```
@@ -7,9 +9,46 @@ run.py      end-to-end experiment (encode -> build -> search -> report)
 indexes.py  the index backends (exact MaxSim, PLAID, asymmetric binary, binary IVF)
 ```
 
+## Benchmark results
+
+KURE-v2 is a late-interaction model: each document is stored as a set of token vectors, so the practical questions for deployment are index size and search cost. We benchmarked KURE-v2 across ANN backends and compression schemes on the 9 Korean MTEB retrieval tasks, against five single-vector baselines served with [faiss HNSW](https://faiss.ai/cpp_api/struct/structfaiss_1_1IndexHNSW.html). All numbers are end-to-end: batch-1 query encoding + index search, measured serially on one A100 80GB.
+
+<p align="center">
+  <img src="../../assets/deploy_overview.png" width="100%" alt="Average nDCG@10 vs. index storage (left) and vs. end-to-end QPS (right)">
+</p>
+
+Two things the figures show:
+
+- Hierarchical token pooling (x2) halves the index (24.2 -> 12.5 GB) with no measurable nDCG loss. Asymmetric binary quantization (1-bit document tokens, bf16 queries) shrinks it 4.8x for 0.98. Stacking the two (pooling x3 + binary), the entire 9-corpus index fits in **1.7 GB, smaller than every single-vector HNSW index (7.0-25.4 GB, fp16 vectors)**, while still outscoring the best single-vector model.
+- A live query arrives as text: 4B-8B single-vector models spend 38-40 ms encoding it, capping them at ~25 QPS no matter how fast HNSW is. KURE-v2 encodes in 13.8 ms (154M params), so every configuration except MUVERA serves **44-57 QPS, roughly 2x the 8B single-vector models, at higher quality**.
+
+### Large corpora: tail latency
+
+<p align="center">
+  <img src="../../assets/bigcorpus_miracl.png" width="70%" alt="MIRACL (1.5M docs): quality, e2e p95 latency, index size">
+</p>
+
+On the largest corpus (MIRACL, ~1.5M documents) an exhaustive 1-bit scan costs O(corpus): p95 climbs to 156 ms, and pooling the tokens 3x only brings it to 74 ms. Generating candidates with faiss [BinaryIVF](https://faiss.ai/cpp_api/struct/structfaiss_1_1IndexBinaryIVF.html) (Hamming search over the same 1-bit index) and re-scoring them with exact asymmetric MaxSim cuts p95 to **38 ms on the same 2.2 GB index, lower tail latency than the 4B-8B single-vector baselines (42 ms) at higher nDCG**. For large collections, use a candidate-generating index (PLAID or BinaryIVF), not an exhaustive scan.
+
+<details>
+<summary><b>Measurement details</b></summary>
+
+- **Hardware**: 1x NVIDIA A100 80GB, 2x AMD EPYC 7513 (64 cores), 1.2 TB RAM.
+- **Software**: faiss-cpu 1.15.0, fast-plaid 1.6.0, sentence-transformers 6.0.0, PyTorch 2.8.0.
+- **Protocol**: batch-1, serial. Index-search latency: 10 warmup queries, then every query of the task measured once (QPS = 1/mean). Query-encoding latency: 5 warmup, 50 measured. End-to-end = encoding + search.
+- **Precision**: encoding in bf16; each index stores its own format (HNSW fp16 vectors, PLAID 4-bit residuals, binary 1-bit).
+- **Index size**: the full serialized index on disk (vectors, graph, codebooks; external doc-id mapping excluded). PLAID indexes are frozen (fast-plaid `freeze()`): the merged search-time codes/residuals only, without the per-shard build copies or the raw embeddings fast-plaid keeps for corpora of <= 1,000 documents.
+- **Tasks**: the 9 Korean MTEB retrieval tasks; MLDR is the mean of its dev/test splits; nDCG@10 x100.
+- **HNSW**: `IndexHNSWSQ` with fp16-stored vectors (inner product on L2-normalized embeddings; lossless for the bf16 embeddings), M=32, efConstruction=200, efSearch=64.
+- **PLAID**: nbits=4, all other settings fast-plaid defaults (kmeans_niters=4, n_ivf_probe=8, n_full_scores=4096). nbits=2/1 give 14.2/9.1 GB at 81.40/80.70 nDCG.
+- **MUVERA**: num_repetitions=10, num_simhash_projections=6, final_projection_dimension=8192, exact-MaxSim rerank of the top 1,000.
+- **BinaryIVF**: nlist=floor(sqrt(total tokens)) capped at 65,536, nprobe=32, top-128 Hamming tokens per query token, exact asymmetric-MaxSim rerank of the top 1,000 documents.
+- **Token pooling**: hierarchical (Ward linkage), pool_factor 2-3, documents only.
+</details>
+
 ## Run
 
-No setup: the `# /// script` block at the top of `run.py` declares its own dependencies (sentence-transformers >= 6.0, fast-plaid, faiss-cpu, torch 2.8/cu128), so `uv run deploy/late-interaction/run.py` ignores the project venv and resolves an isolated, cached environment for the script on first run. This is deliberate: the project venv pins pylate, which pins fast-plaid to the 1.4.6.x line, while the script pins the exact stack behind the model-card figures (sentence-transformers 6.0.0, fast-plaid 1.6.0, faiss-cpu 1.15.0, torch 2.8.0, and the flash-maxsim Triton kernel used for exhaustive and rerank MaxSim scoring; plain torch is the CPU fallback). The measurement protocol also matches: 10 warmup queries then every task query timed once for search, 5 warmup runs then 50 timed runs for batch-1 query encoding.
+No setup: the `# /// script` block at the top of `run.py` declares its own dependencies (sentence-transformers >= 6.0, fast-plaid, faiss-cpu, torch 2.8/cu128), so `uv run deploy/late-interaction/run.py` ignores the project venv and resolves an isolated, cached environment for the script on first run. This is deliberate: the `late-interaction` extra pins pylate, which pins fast-plaid to the 1.4.6.x line, while the script pins the exact stack behind the model-card figures (sentence-transformers 6.0.0, fast-plaid 1.6.0, faiss-cpu 1.15.0, torch 2.8.0, and the flash-maxsim Triton kernel used for exhaustive and rerank MaxSim scoring; plain torch is the CPU fallback). The measurement protocol also matches: 10 warmup queries then every task query timed once for search, 5 warmup runs then 50 timed runs for batch-1 query encoding.
 
 ```bash
 uv run deploy/late-interaction/run.py --index maxsim                     # exact MaxSim (quality ceiling)

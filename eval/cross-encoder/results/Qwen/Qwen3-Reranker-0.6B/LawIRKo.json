@@ -1,0 +1,32 @@
+{
+  "ndcg_at_1": 0.62616,
+  "ndcg_at_5": 0.77014,
+  "ndcg_at_10": 0.78651,
+  "map_at_10": 0.73701,
+  "mrr_at_10": 0.7402121228321072,
+  "recall_at_10": 0.9391,
+  "main_score": 0.78651,
+  "_model": "Qwen/Qwen3-Reranker-0.6B",
+  "_task": "LawIRKo",
+  "_split": "test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 83.58367790625148,
+  "pps_batch_size": 32,
+  "pps_sweep": {
+    "8": 78.10993547556023,
+    "16": 81.94304882981031,
+    "32": 83.58367790625148,
+    "64": 82.93322601016648,
+    "128": 78.9734170769631,
+    "256": 72.33931045194159,
+    "512": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

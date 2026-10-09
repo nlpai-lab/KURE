@@ -1,0 +1,32 @@
+{
+  "ndcg_at_1": 0.6082,
+  "ndcg_at_5": 0.73808,
+  "ndcg_at_10": 0.75722,
+  "map_at_10": 0.71006,
+  "mrr_at_10": 0.7144976589194945,
+  "recall_at_10": 0.90401,
+  "main_score": 0.75722,
+  "_model": "BAAI/bge-reranker-v2-gemma",
+  "_task": "LawIRKo",
+  "_split": "test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 44.66580097757544,
+  "pps_batch_size": 16,
+  "pps_sweep": {
+    "8": 43.6926432003007,
+    "16": 44.66580097757544,
+    "32": 44.51261357705849,
+    "64": 43.2827460221836,
+    "128": 40.59429707763073,
+    "256": 36.4785791596386,
+    "512": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}
