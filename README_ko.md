@@ -10,6 +10,7 @@
 
 ## Update Logs
 
+- 2026.10.XX: [🤗 KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base), [🤗 KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) 공개.
 - 2026.10.01: [🤗 KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base), [🤗 KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) 공개.
 - 2026.08.29: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) 공개.
 - 2024.12.21: [🤗 KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1), MTEB-ko-retrieval 리더보드 공개
@@ -19,6 +20,8 @@
 
 | Model | Type | Params | Base model |
 |---|---|---|---|
+| [KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base) | Learned Sparse Retrieval (LSR) | 593M | [omai-research/milco-650m](https://huggingface.co/omai-research/milco-650m) |
+| [KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) | Learned Sparse Retrieval (LSR) | 149M | [nlpai-lab/KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised) |
 | [KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base) | Reranker (cross-encoder) | 1.7B | [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B) |
 | [KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) | Reranker (cross-encoder) | 149M | [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) |
 | [KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) | Late-interaction (multi-vector) | 154M | [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) |
@@ -34,9 +37,35 @@ uv sync                                                # dense, sparse, cross-en
 uv sync --extra late-interaction --no-default-groups   # KURE-v2 (PyLate)
 ```
 
-PyLate는 `sentence-transformers==5.3.0`을 고정하지만 KURE-Reranker는 `>=5.6.1`이 필요하므로, late-interaction 환경은 별도로 구성합니다.
-
 ## Usage
+
+### KURE-Sparse
+
+<details>
+<summary><b>Sentence-Transformers</b></summary>
+
+```python
+from sentence_transformers import SparseEncoder
+
+model = SparseEncoder("nlpai-lab/KURE-Sparse-nano", trust_remote_code=True)
+# model = SparseEncoder("nlpai-lab/KURE-Sparse-base", trust_remote_code=True)
+
+query = "훈민정음은 언제 만들어졌나요?"
+documents = [
+    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
+    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
+    "한라산은 해발 1,947m로 남한에서 가장 높은 산이며 제주도 중앙에 자리한다.",
+]
+
+# encode_query / encode_document가 KURE-Sparse-nano에 필요한 질의·문서 마커를 붙여줍니다
+query_embeddings = model.encode_query(query)
+document_embeddings = model.encode_document(documents)
+
+# 내적 점수 (높을수록 관련성 높음)
+scores = model.similarity(query_embeddings, document_embeddings)
+```
+
+</details>
 
 ### KURE-Reranker
 
@@ -191,6 +220,36 @@ uv run python eval/dense/make_leaderboard.py
 | dragonkue/colbert-ko-0.1b | Late-interaction | 149M | 0.6776 | 0.7723 |
 | yjoonjang/colbert-ko-v1 | Late-interaction | 149M | 0.6282 | 0.7212 |
 
+### Sparse Leaderboard
+
+Learned sparse 모델은 같은 9개 태스크를 같은 기준으로, mteb의 `SparseEncoder` wrapper를 사용해 bf16, 최대 8,192 토큰에서 벡터 pruning 없이 평가합니다. nDCG@10과 함께 질의·문서당 평균 활성 차원 수와, 질의-문서 내적 한 번에 필요한 곱셈-덧셈의 기댓값인 FLOPs를 보고합니다. 직접 평가하려면 다음을 실행합니다:
+
+```bash
+uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-nano
+```
+
+태스크별 결과 파일은 [`eval/sparse/results`](eval/sparse/results)에 있으며, 아래 표는 그 파일들로부터 재생성됩니다:
+
+```bash
+uv run python eval/sparse/make_leaderboard.py
+```
+
+9개 태스크 평균입니다. 점선은 참고용 dense 모델입니다.
+
+<p align="center">
+  <img src="assets/sparse_ndcg_flops.png" width="80%" alt="9개 한국어 태스크에서 sparse 검색 모델의 평균 nDCG@10 대비 평균 FLOPs">
+</p>
+
+| Model | Params | Avg nDCG@10 | Query dims | Document dims | FLOPs |
+|---|---:|---:|---:|---:|---:|
+| **[nlpai-lab/KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base)** | 593M | **0.7984** | 100 | 1,897 | 36.5 |
+| omai-research/milco-650m | 593M | 0.7824 | 105 | 1,167 | 32.3 |
+| **[nlpai-lab/KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano)** | 149M | 0.7716 | 147 | 843 | 23.0 |
+| telepix/PIXIE-Splade-v1.5 | 149M | 0.7608 | 117 | 1,541 | 37.3 |
+| yjoonjang/splade-ko-v1 | 149M | 0.7526 | 109 | 742 | 29.1 |
+| telepix/PIXIE-Splade-v1.0 | 149M | 0.6636 | 121 | 625 | 22.4 |
+| opensearch-project/opensearch-neural-sparse-encoding-multilingual-v1 | 167M | 0.5444 | 29 | 176 | 6.8 |
+
 ### Reranker Leaderboard
 
 Reranker는 같은 9개 태스크에서 [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark) 프로토콜로 평가합니다: 각 질의의 후보는 정답 문서와, negative 로 BM25 상위 50개 중 정답을 뺀 나머지이며(BelebeleRetrieval 은 kor_Hang-kor_Hang subset), 모든 모델을 bf16, 최대 8,192 토큰으로 실행하고, nDCG@10과 초당 처리 쌍 수(PPS, NVIDIA RTX A6000 48GB 1대)를 보고합니다. 직접 평가하려면 다음을 실행합니다:
@@ -233,6 +292,14 @@ uv run python eval/cross-encoder/make_leaderboard.py
 | telepix/PIXIE-Spell-Reranker-Preview-0.6B | 596M | 0.7760 | 99.7 |
 
 ## Training Details
+
+### KURE-Sparse
+
+학습 코드는 [`train/sparse`](train/sparse)에 있습니다.
+
+- KURE-v2 SFT 데이터에서 Qwen3-Reranker-8B 교사로부터, in-batch 대조 학습과 질의별 후보에 대한 KL 증류를 결합하고 질의·문서 모두에 L1 sparsity 페널티를 주어 최대 8,192 토큰으로 1 에폭 학습합니다.
+- **KURE-Sparse-base**: [omai-research/milco-650m](https://huggingface.co/omai-research/milco-650m)에서 fine-tuning. 영어 pivot 어휘 30,522개와 원문 토큰 250,002개 위에서 점수화.
+- **KURE-Sparse-nano**: [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised)에 A.X-Encoder-base의 MLM 헤드를 이식하고 2,070만 쌍으로 사전학습한 뒤 fine-tuning. 어휘 36,282개.
 
 ### KURE-Reranker
 

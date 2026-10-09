@@ -10,6 +10,7 @@
 
 ## Update Logs
 
+- 2026.10.XX: [🤗 KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base) and [🤗 KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) released.
 - 2026.10.01: [🤗 KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base) and [🤗 KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) released.
 - 2026.08.29: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) released.
 - 2024.12.21: [🤗 KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1) released with the MTEB-ko-retrieval leaderboard.
@@ -19,6 +20,8 @@
 
 | Model | Type | Params | Base model |
 |---|---|---|---|
+| [KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base) | Learned Sparse Retrieval (LSR) | 593M | [omai-research/milco-650m](https://huggingface.co/omai-research/milco-650m) |
+| [KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) | Learned Sparse Retrieval (LSR) | 149M | [nlpai-lab/KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised) |
 | [KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base) | Reranker (cross-encoder) | 1.7B | [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B) |
 | [KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) | Reranker (cross-encoder) | 149M | [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) |
 | [KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) | Late-interaction (multi-vector) | 154M | [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) |
@@ -35,9 +38,35 @@ uv sync                                                # dense, sparse and cross
 uv sync --extra late-interaction --no-default-groups   # KURE-v2 with PyLate
 ```
 
-PyLate pins `sentence-transformers==5.3.0`, while the KURE-Reranker models need `>=5.6.1`, so the late-interaction stack installs into its own environment.
-
 ## Usage
+
+### KURE-Sparse
+
+<details>
+<summary><b>Sentence-Transformers</b></summary>
+
+```python
+from sentence_transformers import SparseEncoder
+
+model = SparseEncoder("nlpai-lab/KURE-Sparse-nano", trust_remote_code=True)
+# model = SparseEncoder("nlpai-lab/KURE-Sparse-base", trust_remote_code=True)
+
+query = "훈민정음은 언제 만들어졌나요?"
+documents = [
+    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
+    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
+    "한라산은 해발 1,947m로 남한에서 가장 높은 산이며 제주도 중앙에 자리한다.",
+]
+
+# encode_query / encode_document add the query and document markers KURE-Sparse-nano expects
+query_embeddings = model.encode_query(query)
+document_embeddings = model.encode_document(documents)
+
+# Dot-product scores (higher is more relevant)
+scores = model.similarity(query_embeddings, document_embeddings)
+```
+
+</details>
 
 ### KURE-Reranker
 
@@ -192,6 +221,36 @@ Average over the nine tasks. Full per-task results are on the official [MTEB Lea
 | dragonkue/colbert-ko-0.1b | Late-interaction | 149M | 0.6776 | 0.7723 |
 | yjoonjang/colbert-ko-v1 | Late-interaction | 149M | 0.6282 | 0.7212 |
 
+### Sparse Leaderboard
+
+Learned sparse models are evaluated on the same nine tasks under the same conventions, with mteb's `SparseEncoder` wrapper in bf16 at up to 8,192 tokens and without pruning the vectors. Next to nDCG@10 we report the average number of active dimensions per query and per document, and FLOPs, the expected number of multiply-adds per query-document dot product. To evaluate a sparse model yourself:
+
+```bash
+uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-nano
+```
+
+The per-task result files are in [`eval/sparse/results`](eval/sparse/results), and the table below is regenerated from them:
+
+```bash
+uv run python eval/sparse/make_leaderboard.py
+```
+
+Average over the nine tasks. The dashed lines mark dense models for reference.
+
+<p align="center">
+  <img src="assets/sparse_ndcg_flops.png" width="80%" alt="Average nDCG@10 vs. average FLOPs of sparse retrievers on the nine Korean tasks">
+</p>
+
+| Model | Params | Avg nDCG@10 | Query dims | Document dims | FLOPs |
+|---|---:|---:|---:|---:|---:|
+| **[nlpai-lab/KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base)** | 593M | **0.7984** | 100 | 1,897 | 36.5 |
+| omai-research/milco-650m | 593M | 0.7824 | 105 | 1,167 | 32.3 |
+| **[nlpai-lab/KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano)** | 149M | 0.7716 | 147 | 843 | 23.0 |
+| telepix/PIXIE-Splade-v1.5 | 149M | 0.7608 | 117 | 1,541 | 37.3 |
+| yjoonjang/splade-ko-v1 | 149M | 0.7526 | 109 | 742 | 29.1 |
+| telepix/PIXIE-Splade-v1.0 | 149M | 0.6636 | 121 | 625 | 22.4 |
+| opensearch-project/opensearch-neural-sparse-encoding-multilingual-v1 | 167M | 0.5444 | 29 | 176 | 6.8 |
+
 ### Reranker Leaderboard
 
 Rerankers are evaluated on the same nine tasks with the protocol of [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark): each query's candidates are its gold documents plus, as negatives, the BM25 top-50 minus the golds (BelebeleRetrieval on its kor_Hang-kor_Hang subset), every model runs in bf16 at up to 8,192 tokens, and we report nDCG@10 with throughput in pairs per second (PPS), measured on one NVIDIA RTX A6000 48GB. To evaluate a reranker yourself:
@@ -234,6 +293,14 @@ Mean over the nine tasks. Per-task nDCG@10 and PPS are in the [KURE-Reranker-bas
 | telepix/PIXIE-Spell-Reranker-Preview-0.6B | 596M | 0.7760 | 99.7 |
 
 ## Training Details
+
+### KURE-Sparse
+
+Training code in [`train/sparse`](train/sparse).
+
+- Distilled from a Qwen3-Reranker-8B teacher on the KURE-v2 SFT data with an in-batch contrastive term plus a KL term over each query's candidates, an L1 sparsity penalty on queries and documents, up to 8,192 tokens, 1 epoch.
+- **KURE-Sparse-base**: fine-tuned from [omai-research/milco-650m](https://huggingface.co/omai-research/milco-650m), scoring over 30,522 English pivot terms plus 250,002 source-language tokens.
+- **KURE-Sparse-nano**: the A.X-Encoder-base MLM head grafted onto [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised), pre-finetuned on 20.7M pairs, then fine-tuned; 36,282 vocabulary terms.
 
 ### KURE-Reranker
 
