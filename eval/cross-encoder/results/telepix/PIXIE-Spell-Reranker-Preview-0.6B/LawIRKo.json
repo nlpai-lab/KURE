@@ -1,0 +1,32 @@
+{
+  "ndcg_at_1": 0.40977,
+  "ndcg_at_5": 0.57125,
+  "ndcg_at_10": 0.60421,
+  "map_at_10": 0.53827,
+  "mrr_at_10": 0.5409412881065983,
+  "recall_at_10": 0.8128,
+  "main_score": 0.60421,
+  "_model": "telepix/PIXIE-Spell-Reranker-Preview-0.6B",
+  "_task": "LawIRKo",
+  "_split": "test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 82.6333149356836,
+  "pps_batch_size": 32,
+  "pps_sweep": {
+    "8": 73.33270405670996,
+    "16": 80.94070646249146,
+    "32": 82.6333149356836,
+    "64": 82.13081406747773,
+    "128": 78.37979822174248,
+    "256": 71.9366180394418,
+    "512": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

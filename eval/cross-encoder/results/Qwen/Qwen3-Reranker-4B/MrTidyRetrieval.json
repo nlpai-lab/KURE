@@ -1,0 +1,31 @@
+{
+  "ndcg_at_1": 0.71496,
+  "ndcg_at_5": 0.81354,
+  "ndcg_at_10": 0.82983,
+  "map_at_10": 0.78176,
+  "mrr_at_10": 0.8054415036006481,
+  "recall_at_10": 0.95566,
+  "main_score": 0.82983,
+  "_model": "Qwen/Qwen3-Reranker-4B",
+  "_task": "MrTidyRetrieval",
+  "_split": "test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 42.77723938893953,
+  "pps_batch_size": 32,
+  "pps_sweep": {
+    "8": 40.8618946330688,
+    "16": 42.42225074602468,
+    "32": 42.77723938893953,
+    "64": 39.22471571488703,
+    "128": 34.02558351084863,
+    "256": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

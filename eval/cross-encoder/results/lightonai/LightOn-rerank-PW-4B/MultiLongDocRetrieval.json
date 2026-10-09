@@ -1,0 +1,28 @@
+{
+  "ndcg_at_1": 0.645,
+  "ndcg_at_5": 0.74621,
+  "ndcg_at_10": 0.76085,
+  "map_at_10": 0.7234700000000001,
+  "mrr_at_10": 0.7316785714285714,
+  "recall_at_10": 0.8775,
+  "main_score": 0.76085,
+  "_model": "lightonai/LightOn-rerank-PW-4B",
+  "_task": "MultiLongDocRetrieval",
+  "_split": "dev+test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 0.6670948448307773,
+  "pps_batch_size": 16,
+  "pps_sweep": {
+    "8": 0.660036770635554,
+    "16": 0.6670948448307773,
+    "32": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

@@ -1,0 +1,26 @@
+{
+  "ndcg_at_1": 0.71148,
+  "ndcg_at_5": 0.84284,
+  "ndcg_at_10": 0.8546,
+  "map_at_10": 0.81257,
+  "mrr_at_10": 0.8125713350173075,
+  "recall_at_10": 0.98288,
+  "main_score": 0.8546,
+  "_model": "jinaai/jina-reranker-v3",
+  "_task": "LawIRKo",
+  "_split": "test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 64.04660914651635,
+  "pps_batch_size": null,
+  "pps_sweep": {
+    "None": 64.04660914651635
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

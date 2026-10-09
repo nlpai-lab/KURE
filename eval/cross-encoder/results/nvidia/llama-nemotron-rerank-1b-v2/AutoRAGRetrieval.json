@@ -1,0 +1,32 @@
+{
+  "ndcg_at_1": 0.86842,
+  "ndcg_at_5": 0.94799,
+  "ndcg_at_10": 0.94799,
+  "map_at_10": 0.92982,
+  "mrr_at_10": 0.9298245614035088,
+  "recall_at_10": 1.0,
+  "main_score": 0.94799,
+  "_model": "nvidia/llama-nemotron-rerank-1b-v2",
+  "_task": "AutoRAGRetrieval",
+  "_split": "test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 54.36152908424934,
+  "pps_batch_size": 32,
+  "pps_sweep": {
+    "8": 52.842075035290456,
+    "16": 54.316965608387335,
+    "32": 54.36152908424934,
+    "64": 51.65321162710955,
+    "128": 47.846818195442275,
+    "256": 41.84946663857008,
+    "512": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

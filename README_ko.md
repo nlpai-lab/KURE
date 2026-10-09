@@ -1,12 +1,17 @@
 # 🔎 KURE: Korea University Retrieval Embedding models
 
+<p align="center" width="100%">
+<img src="assets/kure_logo.png" alt="KURE Logo" style="width: 50%;">
+</p>
+
 [English](README.md) | [한국어](README_ko.md)
 
 **KURE**는 고려대학교 [NLP & AI 연구실](http://nlp.korea.ac.kr/)과 [HIAI 연구소](http://hiai.korea.ac.kr)가 개발한 한국어-영어 검색 임베딩 모델 시리즈입니다.
 
 ## Update Logs
 
-- **2026.08.29**: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) 공개: 한국어-영어 이중 언어 **Late-Interaction (Multi-Vector)** 모델, MTEB(kor, v2) 검색 벤치마크 최고 성능. 최신 `mteb` 기반으로 리더보드 재구축.
+- 2026.10.01: [🤗 KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base), [🤗 KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) 공개.
+- 2026.08.29: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) 공개.
 - 2024.12.21: [🤗 KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1), MTEB-ko-retrieval 리더보드 공개
 - 2024.10.02: [🤗 KoE5](https://huggingface.co/nlpai-lab/KoE5), [🤗 ko-triplet-v1.0](https://huggingface.co/datasets/nlpai-lab/ko-triplet-v1.0) 공개
 
@@ -14,23 +19,50 @@
 
 | Model | Type | Params | Base model |
 |---|---|---|---|
+| [KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base) | Reranker (cross-encoder) | 1.7B | [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B) |
+| [KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) | Reranker (cross-encoder) | 149M | [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) |
 | [KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) | Late-interaction (multi-vector) | 154M | [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) |
 | [KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1) | Dense (single-vector) | 568M | [BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3) |
 | [KoE5](https://huggingface.co/nlpai-lab/KoE5) | Dense (single-vector) | 560M | [intfloat/multilingual-e5-large](https://huggingface.co/intfloat/multilingual-e5-large) |
-
-KURE-v2는 모든 토큰을 128차원 벡터로 인코딩하고 질의-문서 유사도를 MaxSim으로 계산하여, Single-Vector 모델이 압축 과정에서 잃는 토큰 수준의 의미를 보존합니다. 최대 8,192 토큰의 문서를 지원하며 별도의 instruction prefix가 필요 없습니다.
 
 ## Environment
 
 [uv](https://docs.astral.sh/uv/)로 환경을 구성합니다.
 
 ```bash
-uv sync
+uv sync                                                # dense, sparse, cross-encoder 모델
+uv sync --extra late-interaction --no-default-groups   # KURE-v2 (PyLate)
 ```
+
+PyLate는 `sentence-transformers==5.3.0`을 고정하지만 KURE-Reranker는 `>=5.6.1`이 필요하므로, late-interaction 환경은 별도로 구성합니다.
 
 ## Usage
 
-### KURE-v2 (Late-Interaction)
+### KURE-Reranker
+
+<details>
+<summary><b>Sentence-Transformers</b></summary>
+
+```python
+from sentence_transformers import CrossEncoder
+
+model = CrossEncoder("nlpai-lab/KURE-Reranker-nano", max_length=8192)
+# model = CrossEncoder("nlpai-lab/KURE-Reranker-base", max_length=8192)
+
+query = "훈민정음은 언제 만들어졌나요?"
+documents = [
+    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
+    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
+    "한라산은 해발 1,947m로 남한에서 가장 높은 산이며 제주도 중앙에 자리한다.",
+]
+
+# 점수가 높을수록 관련성 높음
+results = model.rank(query, documents, return_documents=True)
+```
+
+</details>
+
+### KURE-v2
 
 <details>
 <summary><b>PyLate</b></summary>
@@ -90,7 +122,7 @@ scores = model.similarity(query_embeddings, document_embeddings)
 
 </details>
 
-### KURE-v1 / KoE5 (Dense, Single-Vector)
+### KURE-v1 / KoE5
 
 <details>
 <summary><b>Sentence-Transformers</b></summary>
@@ -124,14 +156,14 @@ similarities = model.similarity(embeddings, embeddings)
 후기 상호작용 모델은 mteb + PLAID 검색으로 직접 측정하고, 밀집 모델 행은 공식 [MTEB results 저장소](https://github.com/embeddings-benchmark/results)의 점수를 사용합니다. 직접 평가하려면 모델명과 paradigm을 넘기면 됩니다:
 
 ```bash
-uv run python eval/evaluate.py nlpai-lab/KURE-v2 multi-vector
-uv run python eval/evaluate.py nlpai-lab/KURE-v1 single-vector
+uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.py nlpai-lab/KURE-v2 multi-vector
+uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
 ```
 
-리더보드를 뒷받침하는 태스크별 결과 파일은 [`eval/results`](eval/results)에 있으며(출처는 해당 폴더에 문서화), 아래 표는 그 파일들로부터 재생성됩니다:
+리더보드를 뒷받침하는 태스크별 결과 파일은 [`eval/dense/results`](eval/dense/results)에 있으며(출처는 해당 폴더에 문서화), 아래 표는 그 파일들로부터 재생성됩니다:
 
 ```bash
-uv run python eval/make_leaderboard.py
+uv run python eval/dense/make_leaderboard.py
 ```
 
 ### MTEB-ko-retrieval Leaderboard
@@ -159,7 +191,56 @@ uv run python eval/make_leaderboard.py
 | dragonkue/colbert-ko-0.1b | Late-interaction | 149M | 0.6776 | 0.7723 |
 | yjoonjang/colbert-ko-v1 | Late-interaction | 149M | 0.6282 | 0.7212 |
 
+### Reranker Leaderboard
+
+Reranker는 같은 9개 태스크에서 [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark) 프로토콜로 평가합니다: 각 질의의 후보는 정답 문서 전부와 BM25 상위 50개이며, 모든 모델을 bf16, 최대 8,192 토큰으로 실행하고, nDCG@10과 초당 처리 쌍 수(PPS, NVIDIA RTX A6000 48GB 1대)를 보고합니다. 직접 평가하려면 다음을 실행합니다:
+
+```bash
+bash eval/cross-encoder/fetch_eval_assets.sh   # 최초 1회: BM25 후보 pool
+uv run python eval/cross-encoder/evaluate.py nlpai-lab/KURE-Reranker-nano --speed
+```
+
+태스크별 결과 파일은 [`eval/cross-encoder/results`](eval/cross-encoder/results)에 있으며, 아래 표는 그 파일들로부터 재생성됩니다:
+
+```bash
+uv run python eval/cross-encoder/make_leaderboard.py
+```
+
+9개 태스크 평균입니다. 태스크별 nDCG@10과 PPS는 [KURE-Reranker-base 모델 카드](https://huggingface.co/nlpai-lab/KURE-Reranker-base#korean-reranking-evaluation)에서 확인할 수 있습니다.
+
+<p align="center">
+  <img src="assets/reranker_pps_vs_ndcg.png" width="80%" alt="9개 한국어 태스크에서 reranker의 평균 nDCG@10 대비 평균 PPS">
+</p>
+
+| Model | Params | Mean nDCG@10 | Mean PPS |
+|---|---:|---:|---:|
+| Qwen/Qwen3-Reranker-8B | 8.2B | 0.9030 | 15.2 |
+| KaLM-Embedding/KaLM-Reranker-V1-Large-R2 | 7.5B | 0.8960 | 25.3 |
+| Qwen/Qwen3-Reranker-4B | 4.0B | 0.8957 | 24.3 |
+| **[nlpai-lab/KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base)** | 1.7B | **0.8849** | 55.1 |
+| **[nlpai-lab/KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano)** | 149M | **0.8808** | **473.7** |
+| zeroentropy/zerank-2-reranker | 4.0B | 0.8695 | 29.4 |
+| lightonai/LightOn-rerank-PW-4B | 4.5B | 0.8664 | 15.0 |
+| mixedbread-ai/mxbai-rerank-large-v2 | 1.5B | 0.8661 | 65.2 |
+| BAAI/bge-reranker-v2-m3 | 568M | 0.8586 | 404.1 |
+| Qwen/Qwen3-Reranker-0.6B | 596M | 0.8577 | 100.2 |
+| nvidia/llama-nemotron-rerank-1b-v2 | 1.2B | 0.8522 | 127.3 |
+| nlpai-lab/LAMAR-600m | 568M | 0.8406 | 408.8 |
+| dragonkue/bge-reranker-v2-m3-ko | 568M | 0.8263 | 401.5 |
+| BAAI/bge-reranker-v2-gemma | 2.5B | 0.8186 | 58.7 |
+| upskyy/ko-reranker-8k | 568M | 0.8085 | 404.0 |
+| Dongjin-kr/ko-reranker | 560M | 0.7950 | 482.8 |
+| telepix/PIXIE-Spell-Reranker-Preview-0.6B | 596M | 0.7806 | 99.6 |
+
 ## Training Details
+
+### KURE-Reranker
+
+학습 코드는 [`train/cross-encoder`](train/cross-encoder)에 있습니다.
+
+- KURE-v2 SFT 데이터를 질의-문서 3,330만 쌍으로 펼쳐, Qwen3-Reranker 교사로부터 pointwise MSE로 1 에폭 증류합니다.
+- **KURE-Reranker-base**: [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B)를 Qwen3-Reranker 템플릿 위의 logit("yes") − logit("no")로 점수화; 최대 8,192 토큰.
+- **KURE-Reranker-nano**: [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base)에 단일 로짓 헤드; 최대 8,192 토큰.
 
 ### KURE-v2
 
@@ -183,40 +264,7 @@ uv run python eval/make_leaderboard.py
 
 ## Serving
 
-KURE-v2는 후기 상호작용 모델로, 문서를 토큰 벡터의 집합으로 저장하기 때문에 배포에서는 색인 크기와 검색 비용이 실질적인 관건입니다. 9개 한국어 MTEB 검색 태스크에서 KURE-v2를 여러 ANN 백엔드·압축 기법으로, [faiss HNSW](https://faiss.ai/cpp_api/struct/structfaiss_1_1IndexHNSW.html)로 서빙되는 단일 벡터 5종과 함께 벤치마크했습니다. 모든 수치는 종단간(배치 1 질의 인코딩 + 색인 검색)이며 A100 80GB 1대에서 직렬로 측정했습니다. 아래 구성들을 직접 실행해볼 수 있는 코드는 [`deploy/late-interaction`](deploy/late-interaction)에 있습니다 (`uv run deploy/late-interaction/run.py --index plaid`).
-
-<p align="center">
-  <img src="assets/deploy_overview.png" width="100%" alt="색인 크기 대비(좌) / 종단간 QPS 대비(우) 평균 nDCG@10">
-</p>
-
-그림이 보여주는 두 가지:
-
-- Hierarchical Token Pooling(x2)은 nDCG 손실 없이 색인을 절반으로 줄입니다(24.2 → 12.5 GB). Asymmetric Binary Quantization (문서 토큰 1-bit, 질의 bf16)는 0.98 하락으로 4.8배 축소합니다. 둘을 결합하면(pooling x3 + Asym. Binary) 9개 코퍼스 전체 색인이 **1.7 GB로, 모든 Single-Vector HNSW 색인(fp16 벡터, 7.0-25.4 GB)보다 작으면서도** 최고 Single-Vector 모델보다 높은 품질(79.57 대 79.10)을 유지합니다.
-- 실제 query는 텍스트로 도착합니다: 4B-8B Single-Vector 모델은 query 인코딩에만 38-40 ms를 써서 색인이 아무리 빨라도 약 25 QPS에 고정됩니다. KURE-v2는 13.8 ms(154M)에 인코딩하므로 MUVERA를 제외한 모든 구성이 **44-57 QPS로, 8B Single-Vector 모델의 약 2배 처리량을 더 높은 품질로** 제공합니다.
-
-### 대규모 문서 집합에서의 성능, 지연, 인덱스
-
-<p align="center">
-  <img src="assets/bigcorpus_miracl.png" width="70%" alt="MIRACL(150만 문서): 품질, 종단간 p95 지연, 색인 크기">
-</p>
-
-가장 큰 코퍼스(MIRACL, 약 150만 문서)에서 전수 1-bit 스캔의 비용은 문서 수에 비례합니다: p95가 156 ms까지 오르고, 토큰을 3배 줄여도 74 ms에 그칩니다. 같은 1-bit 색인 위에서 faiss [BinaryIVF](https://faiss.ai/cpp_api/struct/structfaiss_1_1IndexBinaryIVF.html) (해밍 검색)로 후보를 생성하고 정확한 비대칭 MaxSim으로 재순위화하면 **같은 2.2 GB 색인에서 p95가 38 ms로, 4B-8B 단일 벡터(42 ms)보다 짧은 꼬리 지연을 더 높은 nDCG로** 달성합니다. 대규모 컬렉션에서는 전수 스캔이 아니라 후보 생성형 색인(PLAID 또는 BinaryIVF)을 사용하세요.
-
-<details>
-<summary><b>측정 상세</b></summary>
-
-- **하드웨어**: NVIDIA A100 80GB 1대, AMD EPYC 7513 2개(64코어), RAM 1.2 TB.
-- **소프트웨어**: faiss-cpu 1.15.0, fast-plaid 1.6.0, sentence-transformers 6.0.0, PyTorch 2.8.0.
-- **프로토콜**: 배치 1, 직렬. 색인 검색 지연: 워밍업 10회 후 태스크 전체 질의를 각 1회 측정(QPS = 평균 지연의 역수). 질의 인코딩 지연: 워밍업 5회 후 50회 측정. 종단간 = 인코딩 + 검색.
-- **정밀도**: 인코딩은 bf16; 색인은 방법별 저장 형식(HNSW fp16 벡터, PLAID 4-bit 잔차, 이진화 1-bit).
-- **색인 크기**: 디스크에 직렬화된 색인 전체(벡터·그래프·코드북 포함, 외부 문서 ID 매핑 제외). PLAID 색인은 freeze된 상태(fast-plaid `freeze()`)로, 검색용 merged 코드/잔차만 세고 샤드 빌드 복사본과 1,000문서 이하 코퍼스에서 fast-plaid가 보관하는 원본 임베딩은 제외합니다.
-- **태스크**: 9개 한국어 MTEB 검색 태스크; MLDR은 dev/test 평균; nDCG@10 x100.
-- **HNSW**: `IndexHNSWSQ`(fp16 저장 벡터, bf16 임베딩에 무손실; 정규화 임베딩의 내적), M=32, efConstruction=200, efSearch=64.
-- **PLAID**: nbits=4, 나머지는 fast-plaid 기본값(kmeans_niters=4, n_ivf_probe=8, n_full_scores=4096). nbits=2/1은 14.2/9.1 GB, 81.40/80.70 nDCG.
-- **MUVERA**: num_repetitions=10, num_simhash_projections=6, final_projection_dimension=8192, 상위 1,000개 정확 MaxSim 재순위화.
-- **BinaryIVF**: nlist=floor(sqrt(총 토큰 수)), 상한 65,536, nprobe=32, 질의 토큰당 상위 128개 해밍 토큰, 상위 1,000개 문서 정확 비대칭 MaxSim 재순위화.
-- **토큰 풀링**: 계층적(Ward linkage), pool_factor 2-3, 문서에만 적용.
-</details>
+ANN 백엔드, 토큰 풀링, 이진 양자화에 따른 KURE-v2의 색인 크기·지연 벤치마크와 실행 가능한 구성은 [`deploy/late-interaction`](deploy/late-interaction/README_ko.md)에 있습니다.
 
 ## License
 
@@ -225,6 +273,15 @@ KURE-v2는 후기 상호작용 모델로, 문서를 토큰 벡터의 집합으�
 ## Citation
 
 If you find our models helpful, please consider citing:
+
+```bibtex
+@misc{kure-reranker,
+  title  = {KURE-Reranker: Korean-English bilingual reranking models},
+  author = {Jang, Youngjoon and Hong, Seongtae and Son, Junyoung and Lee, Taemin and Lim, Heuiseok},
+  year   = {2026},
+  url    = {https://huggingface.co/nlpai-lab/KURE-Reranker-base},
+}
+```
 
 ```bibtex
 @misc{kure-v2,

@@ -1,0 +1,31 @@
+{
+  "ndcg_at_1": 0.97926,
+  "ndcg_at_5": 0.9877199999999999,
+  "ndcg_at_10": 0.9882166666666666,
+  "map_at_10": 0.9858833333333333,
+  "mrr_at_10": 0.9870864197530865,
+  "recall_at_10": 0.9951833333333333,
+  "main_score": 0.9882166666666666,
+  "_model": "lightonai/LightOn-rerank-PW-4B",
+  "_task": "BelebeleRetrieval",
+  "_split": "test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 19.45981634110433,
+  "pps_batch_size": 32,
+  "pps_sweep": {
+    "8": 18.236627659750237,
+    "16": 19.183856629419825,
+    "32": 19.45981634110433,
+    "64": 18.982332114613282,
+    "128": 18.2469907669668,
+    "256": null
+  },
+  "_pps_n_pairs": 559,
+  "_pps_n_queries": 7,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

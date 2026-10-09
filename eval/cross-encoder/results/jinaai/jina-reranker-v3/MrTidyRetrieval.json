@@ -1,0 +1,26 @@
+{
+  "ndcg_at_1": 0.68409,
+  "ndcg_at_5": 0.78931,
+  "ndcg_at_10": 0.81035,
+  "map_at_10": 0.75647,
+  "mrr_at_10": 0.7770548203446066,
+  "recall_at_10": 0.9521,
+  "main_score": 0.81035,
+  "_model": "jinaai/jina-reranker-v3",
+  "_task": "MrTidyRetrieval",
+  "_split": "test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 261.5846881806855,
+  "pps_batch_size": null,
+  "pps_sweep": {
+    "None": 261.5846881806855
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

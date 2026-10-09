@@ -1,0 +1,29 @@
+{
+  "ndcg_at_1": 0.165,
+  "ndcg_at_5": 0.255305,
+  "ndcg_at_10": 0.2881,
+  "map_at_10": 0.24216,
+  "mrr_at_10": 0.24604563492063491,
+  "recall_at_10": 0.4375,
+  "main_score": 0.2881,
+  "_model": "BAAI/bge-reranker-v2-gemma",
+  "_task": "MultiLongDocRetrieval",
+  "_split": "dev+test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 2.5436499958027046,
+  "pps_batch_size": 8,
+  "pps_sweep": {
+    "8": 2.5436499958027046,
+    "16": 2.535036420766116,
+    "32": 2.4466151203207716,
+    "64": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

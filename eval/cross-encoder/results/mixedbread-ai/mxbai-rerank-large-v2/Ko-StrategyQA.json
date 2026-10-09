@@ -1,0 +1,31 @@
+{
+  "ndcg_at_1": 0.79899,
+  "ndcg_at_5": 0.83168,
+  "ndcg_at_10": 0.85628,
+  "map_at_10": null,
+  "mrr_at_10": null,
+  "recall_at_10": null,
+  "main_score": 0.85628,
+  "_model": "mixedbread-ai/mxbai-rerank-large-v2",
+  "_task": "Ko-StrategyQA",
+  "_split": "dev",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 69.98723496880919,
+  "pps_batch_size": 16,
+  "pps_sweep": {
+    "8": 67.47354816231571,
+    "16": 69.98723496880919,
+    "32": 66.10759920348609,
+    "64": 56.66301589849748,
+    "128": 45.43050889639929,
+    "256": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}

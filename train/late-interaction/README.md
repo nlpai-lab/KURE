@@ -14,7 +14,7 @@ dev_evaluator.py  three cheap Korean retrieval dev tasks for in-training monitor
 ## Setup
 
 ```bash
-uv sync --extra train
+uv sync --extra late-interaction --extra train --no-default-groups
 ```
 
 ## Quickstart
@@ -41,7 +41,7 @@ Both stages read `datasets.save_to_disk` directories, one per language:
 Contrastive learning (pylate `CachedContrastive`) where the only negatives are the other pairs in a very large batch. `--batch-size` is the *global* in-batch negative pool (split across devices), so the GPU count changes wall clock, not the loss. Batches are language-pure so the pool is never separable by language alone.
 
 ```bash
-uv run torchrun --nproc_per_node 8 train/late-interaction/1_pft.py \
+uv run --extra late-interaction --extra train --no-default-groups torchrun --nproc_per_node 8 train/late-interaction/1_pft.py \
     --data-root /path/to/pft --head multi --run-name kure-v2-pft
 ```
 
@@ -52,7 +52,7 @@ KURE-v2 settings are the defaults: global batch 16,384, lr 1e-4, temperature 0.0
 Contrastive learning plus KL distillation of the teacher's ranking (`CachedContrastiveKLDiv`). A sharp student temperature (0.001 vs teacher 0.1) distills the ranking structure rather than absolute margins. Rows whose hardest negative outscores the positive under the teacher are dropped as likely false negatives.
 
 ```bash
-uv run torchrun --nproc_per_node 8 train/late-interaction/2_sft.py \
+uv run --extra late-interaction --extra train --no-default-groups torchrun --nproc_per_node 8 train/late-interaction/2_sft.py \
     --model-name output/kure-v2-pft/final --data-root /path/to/sft \
     --run-name kure-v2-sft
 ```

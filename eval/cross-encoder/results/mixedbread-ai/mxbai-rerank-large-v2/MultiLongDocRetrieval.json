@@ -1,0 +1,29 @@
+{
+  "ndcg_at_1": 0.5549999999999999,
+  "ndcg_at_5": 0.6525350000000001,
+  "ndcg_at_10": 0.678655,
+  "map_at_10": 0.637345,
+  "mrr_at_10": 0.6377073412698413,
+  "recall_at_10": 0.81,
+  "main_score": 0.678655,
+  "_model": "mixedbread-ai/mxbai-rerank-large-v2",
+  "_task": "MultiLongDocRetrieval",
+  "_split": "dev+test",
+  "_max_length": 8192,
+  "_neg_top_k": 50,
+  "pps": 3.1996634064833525,
+  "pps_batch_size": 8,
+  "pps_sweep": {
+    "8": 3.1996634064833525,
+    "16": 3.1874974282132187,
+    "32": 3.1807453428810195,
+    "64": null
+  },
+  "_pps_n_pairs": 550,
+  "_pps_n_queries": 11,
+  "_pps_passes": 3,
+  "_pps_dtype": "bfloat16",
+  "_pps_attn": "flash_attention_2",
+  "_pps_gpu": "NVIDIA RTX A6000",
+  "_pps_gpu_shared": false
+}
