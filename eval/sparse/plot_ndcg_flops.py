@@ -51,7 +51,7 @@ MODELS = {
 # dense references drawn as horizontal dashed lines (--no-reference to drop them):
 # label, eval/dense/results dir, label above or below its line
 REFERENCES = [("Qwen3-Embedding-8B", "Qwen__Qwen3-Embedding-8B", "above"),
-              ("Qwen3-Embedding-4B", "Qwen__Qwen3-Embedding-4B", "below")]
+              ("pplx-embed-v1-4b", "perplexity-ai__pplx-embed-v1-4b", "below")]
 DENSE_RESULTS = Path(__file__).resolve().parents[1] / "dense" / "results"
 
 # label offsets in points where the default (right of the marker) would collide; dx < 0 = left, right-aligned
