@@ -1,4 +1,4 @@
-"""Leaderboard over eval/sparse/results: Avg nDCG@10 (main) plus the sparsity numbers eval.py
+"""Leaderboard over eval/sparse/results/<model>/ko: Avg nDCG@10 (main) plus the sparsity numbers eval.py
 records -- avg query/corpus active dims and avg_flops -- one aligned row per model.
 
 The result files are mteb's ResultCache format, identical to eval/dense, so the same MTEB(kor, v2)
@@ -49,7 +49,7 @@ def cell(scores_by_split, task, fields):
 
 def model_row(model_dir):
     got, meta = {}, {}
-    for f in model_dir.glob("**/*.json"):
+    for f in (model_dir / "ko").glob("*.json"):
         if f.stem == "model_meta":
             meta = json.loads(f.read_text())
         elif f.stem in TASKS:

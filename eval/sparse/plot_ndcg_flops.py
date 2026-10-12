@@ -74,7 +74,7 @@ def dense_average(model_dir: Path) -> float:
 
 def averages(model_dir: Path) -> tuple[float, float]:
     got = {}
-    for f in model_dir.glob("**/*.json"):
+    for f in (model_dir / "ko").glob("*.json"):
         if f.stem in L.TASKS:
             cell = L.cell(json.loads(f.read_text())["scores"], f.stem, L.FIELDS)
             if cell:

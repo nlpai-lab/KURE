@@ -2,11 +2,12 @@
 
 The 20-task suite is the one used in
 https://github.com/embeddings-benchmark/results/pull/654; this runs its nine retrieval tasks.
-Pass --all-tasks for all twenty, or --tasks to name specific ones. Vectors are used as the model
-produces them: no max_active_dims pruning.
+Pass --all-tasks for all twenty, or --tasks to name specific ones. --suite en runs the English
+counterpart instead: the 13 BEIR tasks plus MS MARCO (dev), as SparseUp reports them. Vectors are
+used as the model produces them: no max_active_dims pruning.
 
-Results go under eval/sparse/results/ in mteb's ResultCache layout, one file per task, the same
-as eval/dense, and eval/sparse/make_leaderboard.py turns them into the leaderboard.
+Results go under eval/sparse/results/<model>/<suite>/, one mteb result file per task, and
+eval/sparse/make_leaderboard.py (ko) or make_leaderboard_en.py (en) turns them into the leaderboard.
 Each task file also carries the sparsity numbers ST's SparseInformationRetrievalEvaluator
 reports -- query/corpus active dims and sparsity ratio, and avg_flops, the dot product of the
 mean query and mean corpus activation-indicator vectors -- computed from the very embeddings
@@ -18,6 +19,7 @@ rather than reimplemented.
 
     uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-nano
     uv run python eval/sparse/evaluate.py output/kure-sparse-base/final --tasks PublicHealthQA
+    uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-base --suite en --max-seq-length 8192
 """
 
 from __future__ import annotations
@@ -41,10 +43,16 @@ from mteb.types import PromptType
 
 BENCHMARK = "MTEB(kor, v2)"
 RETRIEVAL_TYPES = ("Retrieval",)
+# --suite en: the 13 BEIR tasks plus MS MARCO (dev), as SparseUp reports them. Biggest corpus first.
+BEIR_TASKS = ["MSMARCO", "ClimateFEVER", "FEVER", "HotpotQA", "DBPedia", "NQ", "QuoraRetrieval", "Touche2020",
+              "TRECCOVID", "SCIDOCS", "FiQA2018", "ArguAna", "NFCorpus", "SciFact"]
 
 
-def select_tasks(all_tasks: bool, only: list[str] | None):
-    tasks = list(mteb.get_benchmark(BENCHMARK).tasks)
+def select_tasks(suite: str, all_tasks: bool, only: list[str] | None):
+    if suite == "en":
+        tasks = list(mteb.get_tasks(tasks=BEIR_TASKS, languages=["eng"]))
+    else:
+        tasks = list(mteb.get_benchmark(BENCHMARK).tasks)
     if only:
         by_name = {t.metadata.name: t for t in tasks}
         missing = [n for n in only if n not in by_name]
@@ -165,6 +173,24 @@ class SparsityStatsWrapper(SparseEncoderWrapper):
         }
 
 
+class SuiteResultCache(mteb.ResultCache):
+    """mteb's result cache with the language suite in place of the revision directory.
+
+    Results land in results/<model>/<suite>/<task>.json (suite = ko or en), so a model's Korean and English runs
+    sit side by side. Saving and the skip-if-on-disk check both go through this one path method.
+    """
+
+    def __init__(self, cache_path: Path, suite: str):
+        super().__init__(cache_path=cache_path)
+        self.suite = suite
+
+    def get_task_result_path(self, task_name, model_name, model_revision=None, remote=False, experiment_name=None):
+        if isinstance(model_name, str) and model_revision is None:
+            model_revision = "no_revision_available"
+        path = super().get_task_result_path(task_name, model_name, model_revision, remote)
+        return path.parent.parent / self.suite / path.name
+
+
 def evaluate_task(model, task, args, cache):
     """Evaluate one task, halving the batch size on every OOM.
 
@@ -222,6 +248,8 @@ def main() -> None:
     parser.add_argument("--dtype", default="bfloat16", choices=["bfloat16", "float16", "float32"])
     parser.add_argument("--max-seq-length", type=int, default=0,
                         help="Override the checkpoint's own limit; 0 keeps it")
+    parser.add_argument("--suite", default="ko", choices=["ko", "en"],
+                        help="ko: MTEB(kor, v2) retrieval; en: the 13 BEIR tasks + MS MARCO (English)")
     parser.add_argument("--all-tasks", action="store_true", help="Include the non-retrieval tasks")
     parser.add_argument("--tasks", nargs="+", help="Run only these task names")
     parser.add_argument("--overwrite", action="store_true", help="Redo tasks already on disk")
@@ -229,7 +257,7 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-    tasks = select_tasks(args.all_tasks, args.tasks)
+    tasks = select_tasks(args.suite, args.all_tasks, args.tasks)
     logging.info(f"{len(tasks)} tasks: {[t.metadata.name for t in tasks]}")
 
     model = SparsityStatsWrapper(args.model_path, dtype=getattr(torch, args.dtype))
@@ -240,7 +268,7 @@ def main() -> None:
         model.model.max_seq_length = args.max_seq_length
         logging.info(f"max_seq_length overridden to {args.max_seq_length}")
 
-    cache = mteb.ResultCache(cache_path=Path(__file__).resolve().parent)
+    cache = SuiteResultCache(Path(__file__).resolve().parent, args.suite)
     for task in tasks:
         task_result = evaluate_task(model, task, args, cache)
         extra = next((e for entries in task_result.scores.values() for e in entries if "avg_flops" in e), {})
@@ -249,7 +277,8 @@ def main() -> None:
             + (f" | query {extra['query_active_dims']:.1f} / corpus {extra['corpus_active_dims']:.1f} "
                f"active dims, avg_flops {extra['avg_flops']:.2f}" if extra else "")
         )
-    print("done; results under eval/sparse/results/. Table: uv run python eval/sparse/make_leaderboard.py")
+    board = "make_leaderboard_en.py" if args.suite == "en" else "make_leaderboard.py"
+    print(f"done; results under eval/sparse/results/. Table: uv run python eval/sparse/{board}")
 
 
 if __name__ == "__main__":

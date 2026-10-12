@@ -189,7 +189,7 @@ uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.p
 uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
 ```
 
-리더보드를 뒷받침하는 태스크별 결과 파일은 [`eval/dense/results`](eval/dense/results)에 있으며(출처는 해당 폴더에 문서화), 아래 표는 그 파일들로부터 재생성됩니다:
+리더보드를 뒷받침하는 태스크별 결과 파일은 [`eval/dense/results`](eval/dense/results)에 있으며, 아래 표는 그 파일들로부터 재생성됩니다:
 
 ```bash
 uv run python eval/dense/make_leaderboard.py
@@ -197,7 +197,7 @@ uv run python eval/dense/make_leaderboard.py
 
 ### MTEB-ko-retrieval Leaderboard
 
-9개 태스크 평균입니다. 태스크별 상세 결과는 공식 [MTEB 리더보드](https://mteb-leaderboard.hf.space/benchmark/MTEB(kor%2C%20v2)?types=Retrieval&s.summary=meanTask&d.summary=desc)에서 확인할 수 있습니다.
+9개 태스크 평균입니다. 태스크별 결과는 [`eval/dense/results/README.md`](eval/dense/results/README.md)와 공식 [MTEB 리더보드](https://mteb-leaderboard.hf.space/benchmark/MTEB(kor%2C%20v2)?types=Retrieval&s.summary=meanTask&d.summary=desc)에서 확인할 수 있습니다.
 
 | Model | Type | Params | Avg nDCG@10 | Avg Recall@10 |
 |---|---|---:|---:|---:|
@@ -240,7 +240,7 @@ uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-nano
 uv run python eval/sparse/make_leaderboard.py
 ```
 
-9개 태스크 평균입니다. 점선은 참고용 dense 모델입니다.
+9개 태스크 평균입니다. 점선은 참고용 dense 모델입니다. 태스크별 결과와 영어 BEIR 결과는 [`eval/sparse/results/README.md`](eval/sparse/results/README.md)에 있습니다.
 
 <p align="center">
   <img src="assets/sparse_ndcg_flops.png" width="80%" alt="9개 한국어 태스크에서 sparse 검색 모델의 평균 nDCG@10 대비 평균 FLOPs">
@@ -271,7 +271,7 @@ uv run python eval/cross-encoder/evaluate.py nlpai-lab/KURE-Reranker-nano --spee
 uv run python eval/cross-encoder/make_leaderboard.py
 ```
 
-9개 태스크 평균입니다. 태스크별 nDCG@10과 PPS는 [KURE-Reranker-base 모델 카드](https://huggingface.co/nlpai-lab/KURE-Reranker-base#korean-reranking-evaluation)에서 확인할 수 있습니다.
+9개 태스크 평균입니다. 태스크별 nDCG@10과 PPS는 [`eval/cross-encoder/results/README.md`](eval/cross-encoder/results/README.md)에 있습니다.
 
 <p align="center">
   <img src="assets/reranker_pps_vs_ndcg.png" width="80%" alt="9개 한국어 태스크에서 reranker의 평균 nDCG@10 대비 평균 PPS">

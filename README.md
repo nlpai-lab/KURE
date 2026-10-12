@@ -198,7 +198,7 @@ uv run python eval/dense/make_leaderboard.py
 
 ### MTEB-ko-retrieval Leaderboard
 
-Average over the nine tasks. Full per-task results are on the official [MTEB Leaderboard](https://mteb-leaderboard.hf.space/benchmark/MTEB(kor%2C%20v2)?types=Retrieval&s.summary=meanTask&d.summary=desc).
+Average over the nine tasks. Per-task scores are in [`eval/dense/results/README.md`](eval/dense/results/README.md) and on the official [MTEB Leaderboard](https://mteb-leaderboard.hf.space/benchmark/MTEB(kor%2C%20v2)?types=Retrieval&s.summary=meanTask&d.summary=desc).
 
 | Model | Type | Params | Avg nDCG@10 | Avg Recall@10 |
 |---|---|---:|---:|---:|
@@ -241,7 +241,7 @@ The per-task result files are in [`eval/sparse/results`](eval/sparse/results), a
 uv run python eval/sparse/make_leaderboard.py
 ```
 
-Average over the nine tasks. The dashed lines mark dense models for reference.
+Average over the nine tasks. The dashed lines mark dense models for reference. Per-task scores, along with English BEIR results, are in [`eval/sparse/results/README.md`](eval/sparse/results/README.md).
 
 <p align="center">
   <img src="assets/sparse_ndcg_flops.png" width="80%" alt="Average nDCG@10 vs. average FLOPs of sparse retrievers on the nine Korean tasks">
@@ -272,7 +272,7 @@ The per-task result files are in [`eval/cross-encoder/results`](eval/cross-encod
 uv run python eval/cross-encoder/make_leaderboard.py
 ```
 
-Mean over the nine tasks. Per-task nDCG@10 and PPS are in the [KURE-Reranker-base model card](https://huggingface.co/nlpai-lab/KURE-Reranker-base#korean-reranking-evaluation).
+Mean over the nine tasks. Per-task nDCG@10 and PPS are in [`eval/cross-encoder/results/README.md`](eval/cross-encoder/results/README.md).
 
 <p align="center">
   <img src="assets/reranker_pps_vs_ndcg.png" width="80%" alt="Mean nDCG@10 vs. mean PPS of rerankers on the nine Korean tasks">
