@@ -1,4 +1,4 @@
-# 🔎 KURE: Korea University Retrieval Embedding models
+# 🔎 KURE: Korea University REtrieval models
 
 <p align="center" width="100%">
 <img src="assets/kure_logo.png" alt="KURE Logo" style="width: 50%;">
