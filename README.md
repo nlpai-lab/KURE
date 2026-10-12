@@ -225,6 +225,7 @@ Average over the nine tasks. Per-task scores are in [`eval/dense/results/README.
 | perplexity-ai/pplx-embed-v1-late-0.6b | Late-interaction | 596M | 0.7381 | 0.8328 |
 | **[nlpai-lab/KoE5](https://huggingface.co/nlpai-lab/KoE5)** | Dense | 560M | 0.7337 | 0.8300 |
 | **[nlpai-lab/KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised)** | Late-interaction | 154M | 0.7283 | 0.8268 |
+| google/embeddinggemma-300m | Dense | 308M | 0.7270 | 0.8400 |
 | Qwen/Qwen3-Embedding-0.6B | Dense | 596M | 0.7140 | 0.8222 |
 | dragonkue/colbert-ko-0.1b | Late-interaction | 149M | 0.6776 | 0.7723 |
 | yjoonjang/colbert-ko-v1 | Late-interaction | 149M | 0.6282 | 0.7212 |
