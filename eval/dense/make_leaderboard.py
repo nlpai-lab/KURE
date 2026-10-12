@@ -4,7 +4,7 @@ Discovers every model under the results directory, reads its per-task mteb resul
 files, applies the MTEB(kor, v2) conventions (Korean subsets only; Belebele =
 kor_Hang-kor_Hang; MLDR = mean of dev/test; MIRACL = dev split) and prints a
 markdown table. Model type and parameter count come from each model's
-model_meta.json; models under the nlpai-lab organization are bolded.
+model_meta.json.
 
 Usage:
     uv run python eval/dense/make_leaderboard.py
@@ -91,15 +91,9 @@ def main() -> None:
     heads = [METRIC_LABEL.get(m, f"Avg {m}") for m in args.metrics]
     print(f"| Model | Type | Params | {' | '.join(heads)} |")
     print("|---|---|---:|" + "---:|" * len(args.metrics))
-    best = rows[0]["name"] if rows else None
     for r in rows:
-        label = r["name"]
-        if label.startswith("nlpai-lab/"):
-            label = f"**[{label}](https://huggingface.co/{label})**"
         vals = [f"{v:.4f}" for v in r["avgs"]]
-        if r["name"] == best:
-            vals = [f"**{v}**" for v in vals]
-        print(f"| {label} | {r['type']} | {r['params']} | {' | '.join(vals)} |")
+        print(f"| {r['name']} | {r['type']} | {r['params']} | {' | '.join(vals)} |")
 
 
 if __name__ == "__main__":

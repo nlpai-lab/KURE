@@ -10,6 +10,7 @@
 
 ## Update Logs
 
+- 2026.10.15: [🤗 KURE-v3](https://huggingface.co/nlpai-lab/KURE-v3) released.
 - 2026.10.12: [🤗 KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base) and [🤗 KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) released.
 - 2026.10.01: [🤗 KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base) and [🤗 KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) released.
 - 2026.08.29: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) released.
@@ -20,6 +21,7 @@
 
 | Model | Type | Params | Base model |
 |---|---|---|---|
+| [KURE-v3](https://huggingface.co/nlpai-lab/KURE-v3) | Dense (single-vector) | 1.1B | [nvidia/Nemotron-3-Embed-1B-BF16](https://huggingface.co/nvidia/Nemotron-3-Embed-1B-BF16) |
 | [KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base) | Learned Sparse Retrieval (LSR) | 593M | [omai-research/milco-650m](https://huggingface.co/omai-research/milco-650m) |
 | [KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) | Learned Sparse Retrieval (LSR) | 149M | [nlpai-lab/KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised) |
 | [KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base) | Reranker (cross-encoder) | 1.7B | [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B) |
@@ -171,6 +173,10 @@ similarities = model.similarity(embeddings, embeddings)
 
 ## Evaluation
 
+<p align="center">
+  <img src="assets/kure_v3_ndcg.png" width="100%" alt="Average nDCG@10 on the nine MTEB(kor, v2) retrieval tasks of KURE models and baselines, by paradigm">
+</p>
+
 We evaluate on the nine **MTEB(kor, v2) Retrieval** tasks with the latest [mteb](https://github.com/embeddings-benchmark/mteb) (v2.x), using the Korean subsets only (Belebele: `kor_Hang-kor_Hang`; MLDR is the mean of its dev/test splits):
 
 - [Ko-StrategyQA](https://huggingface.co/datasets/taeminlee/Ko-StrategyQA): Korean ODQA multi-hop retrieval (translated StrategyQA)
@@ -190,7 +196,8 @@ uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.p
 uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
 ```
 
-### MTEB-ko-retrieval Leaderboard
+<details>
+<summary><h3>Dense Leaderboard</h3></summary>
 
 Average over the nine tasks. Per-task scores are in [`eval/dense/results/README.md`](eval/dense/results/README.md) and on the official [MTEB Leaderboard](https://mteb-leaderboard.hf.space/benchmark/MTEB(kor%2C%20v2)?types=Retrieval&s.summary=meanTask&d.summary=desc).
 
@@ -199,6 +206,7 @@ Average over the nine tasks. Per-task scores are in [`eval/dense/results/README.
 | **[nlpai-lab/KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2)** | Late-interaction | 154M | **0.8160** | **0.8921** |
 | nvidia/Nemotron-3-Embed-8B-BF16 | Dense | 8.0B | 0.8127 | 0.8934 |
 | yjoonjang/colbert-ko-en-v2 | Late-interaction | 149M | 0.8063 | 0.8827 |
+| **[nlpai-lab/KURE-v3](https://huggingface.co/nlpai-lab/KURE-v3)** | Dense | 1.1B | 0.7976 | 0.8803 |
 | sionic-ai/comsat-embed-ko-8b-preview | Dense | 7.6B | 0.7927 | 0.8876 |
 | lightonai/mLateOn | Late-interaction | 307M | 0.7906 | 0.8740 |
 | Qwen/Qwen3-Embedding-8B | Dense | 7.6B | 0.7826 | 0.8815 |
@@ -221,7 +229,10 @@ Average over the nine tasks. Per-task scores are in [`eval/dense/results/README.
 | dragonkue/colbert-ko-0.1b | Late-interaction | 149M | 0.6776 | 0.7723 |
 | yjoonjang/colbert-ko-v1 | Late-interaction | 149M | 0.6282 | 0.7212 |
 
-### Sparse Leaderboard
+</details>
+
+<details>
+<summary><h3>Sparse Leaderboard</h3></summary>
 
 Learned sparse models are evaluated on the same nine tasks under the same conventions, with mteb's `SparseEncoder` wrapper in bf16 at up to 8,192 tokens and without pruning the vectors. Next to nDCG@10, we report the average number of active dimensions per query and per document, and FLOPs. To evaluate a sparse model:
 
@@ -245,7 +256,10 @@ Results are averaged over the nine Korean retrieval tasks. The dashed lines mark
 | telepix/PIXIE-Splade-v1.0 | 149M | 0.6636 | 121 | 625 | 22.4 |
 | opensearch-project/opensearch-neural-sparse-encoding-multilingual-v1 | 167M | 0.5444 | 29 | 176 | 6.8 |
 
-### Reranker Leaderboard
+</details>
+
+<details>
+<summary><h3>Reranker Leaderboard</h3></summary>
 
 Rerankers are evaluated on the same nine tasks with the protocol of [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark): each query's candidates are its gold documents plus, as negatives, the BM25 top-50 minus the golds, every model runs in bf16 at up to 8,192 tokens, and we report nDCG@10 with throughput in pairs per second (PPS), measured on one NVIDIA RTX A6000 48GB. To evaluate a reranker:
 
@@ -280,13 +294,22 @@ Results are averaged over the nine Korean retrieval tasks. Per-task nDCG@10 and 
 | Dongjin-kr/ko-reranker | 560M | 0.7861 | 488.0 |
 | telepix/PIXIE-Spell-Reranker-Preview-0.6B | 596M | 0.7760 | 99.7 |
 
+</details>
+
 ## Training Details
+
+### KURE-v3
+
+Training code in [`train/dense`](train/dense).
+
+- Fine-tuned from [nvidia/Nemotron-3-Embed-1B-BF16](https://huggingface.co/nvidia/Nemotron-3-Embed-1B-BF16) by distilling a teacher's scores over each query's candidates on the KURE-v2 SFT data (min-max normalized KL), up to 8,192 tokens, 1 epoch.
+- Matryoshka training at 2,048, 1,024, 512 and 256 dimensions.
 
 ### KURE-Sparse
 
 Training code in [`train/sparse`](train/sparse).
 
-- Distilled from a Qwen3-Reranker-8B teacher on the KURE-v2 SFT data with an in-batch contrastive term plus a KL term over each query's candidates, an L1 sparsity penalty on queries and documents, up to 8,192 tokens, 1 epoch.
+- Distilled from Qwen3-Reranker teacher on the KURE-v2 SFT data with an in-batch contrastive term plus a KL term over each query's candidates, an L1 sparsity regularization on queries and documents, up to 8,192 tokens, 1 epoch.
 - **KURE-Sparse-base**: fine-tuned from [omai-research/milco-650m](https://huggingface.co/omai-research/milco-650m), scoring over 30,522 English pivot terms plus 250,002 source-language tokens.
 - **KURE-Sparse-nano**: the A.X-Encoder-base MLM head grafted onto [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised), pre-finetuned on 20.7M pairs, then fine-tuned. Resulting in 36,282 vocabulary terms.
 
@@ -295,20 +318,18 @@ Training code in [`train/sparse`](train/sparse).
 Training code in [`train/cross-encoder`](train/cross-encoder).
 
 - Distilled from a Qwen3-Reranker teacher with pointwise MSE on the KURE-v2 SFT data flattened to 33.3M query-document pairs, 1 epoch.
-- **KURE-Reranker-base**: [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B) scored as logit("yes") − logit("no") over the Qwen3-Reranker template; up to 8,192 tokens.
-- **KURE-Reranker-nano**: [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) with a single-logit head; up to 8,192 tokens.
+- **KURE-Reranker-base**: [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B) scored as logit("yes") − logit("no") over the Qwen3-Reranker template, up to 8,192 tokens.
+- **KURE-Reranker-nano**: [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) with a single-logit head, up to 8,192 tokens.
 
 ### KURE-v2
 
 The full two-stage training code is in [`train/late-interaction`](train/late-interaction).
 
-- Built on [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) with a multi-layer projection head (128-d per token, MaxSim scoring); trained with [PyLate](https://github.com/lightonai/pylate).
+- Built on [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) with a multi-layer projection head (128-d per token).
 - **Stage 1 (PFT)**: large in-batch contrastive learning on 20.7M weakly related Korean/English pairs, released as [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised).
 - **Stage 2 (SFT)**: contrastive learning + KL distillation from a reranker teacher on 3.03M triplets with hard negatives and false-negative filtering.
 
 ### KURE-v1
-
-Training code in [`train/dense`](train/dense).
 
 - Fine-tuned from [BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3) on ~2M Korean query-document-hard-negative(5) pairs.
 - CachedGISTEmbedLoss, batch size 4,096, lr 2e-5, 1 epoch.

@@ -9,8 +9,9 @@ uv run python eval/dense/make_leaderboard.py
 | Model | Type | Params | Avg | AutoRAG | PublicHealthQA | Ko-StrategyQA | LawIRKo | SQuADKorV1 | Belebele | MrTidy | MLDR | MIRACL |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | **nlpai-lab/KURE-v2** | Late-interaction | 154M | **0.8160** | **0.9718** | 0.8228 | 0.8070 | 0.7550 | **0.9846** | 0.9660 | 0.5974 | **0.7158** | 0.7237 |
-| nvidia/Nemotron-3-Embed-8B-BF16 | Dense | 8.0B | 0.8127 | 0.9311 | 0.8898 | **0.8405** | 0.8481 | 0.9650 | 0.9714 | **0.6540** | 0.4785 | **0.7363** |
+| nvidia/Nemotron-3-Embed-8B-BF16 | Dense | 8.0B | 0.8127 | 0.9311 | 0.8898 | **0.8405** | 0.8481 | 0.9650 | 0.9714 | **0.6540** | 0.4785 | 0.7363 |
 | yjoonjang/colbert-ko-en-v2 | Late-interaction | 149M | 0.8063 | 0.9686 | 0.8222 | 0.7940 | 0.7181 | **0.9846** | 0.9687 | 0.5783 | 0.6992 | 0.7230 |
+| **nlpai-lab/KURE-v3** | Dense | 1.1B | 0.7976 | 0.9303 | 0.8858 | 0.8151 | 0.8172 | 0.9599 | 0.9675 | 0.6177 | 0.4487 | **0.7365** |
 | sionic-ai/comsat-embed-ko-8b-preview | Dense | 7.6B | 0.7927 | 0.8518 | 0.8871 | 0.8394 | 0.8164 | 0.9168 | **0.9853** | 0.6253 | 0.5157 | 0.6964 |
 | lightonai/mLateOn | Late-interaction | 307M | 0.7906 | 0.9392 | 0.8061 | 0.7905 | 0.6431 | 0.9803 | 0.9608 | 0.5817 | 0.7005 | 0.7135 |
 | Qwen/Qwen3-Embedding-8B | Dense | 7.6B | 0.7826 | 0.8276 | 0.8721 | 0.8363 | 0.8171 | 0.9063 | 0.9824 | 0.6187 | 0.5046 | 0.6783 |
