@@ -159,7 +159,7 @@ def size_legend(ax):
         items.append(HPacker(children=[dot, TextArea(name, textprops={"fontsize": 11, "color": INK})],
                              pad=0, sep=4, align="center"))
     box = AnchoredOffsetbox(loc="upper right", child=HPacker(children=items, pad=0, sep=16, align="center"),
-                            bbox_to_anchor=(900, 0.985), bbox_transform=ax.get_xaxis_transform(), frameon=True,
+                            bbox_to_anchor=(0.99, 0.985), bbox_transform=ax.transAxes, frameon=True,
                             pad=0.45, borderpad=0)
     box.patch.set_boxstyle("round,pad=0.2,rounding_size=0.4")
     box.patch.set_edgecolor("#d5dae2")
