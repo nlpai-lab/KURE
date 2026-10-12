@@ -23,7 +23,8 @@ train = [
 [dependency-groups]
 # installed by default (dense, sparse and cross-encoder models all run on sentence-transformers)
 st = [
-    "sentence-transformers>=5.6.1",
+    # 5.7 rewrote the sparse GradCache loss that train/sparse/src/losses.py extends
+    "sentence-transformers>=5.6.1,<5.7",
     # 5.3 (what pylate pins) mis-scores KURE-Reranker-nano; 5.19 drops config._commit_hash, which mteb reads
     "transformers>=5.5,<5.15",
 ]

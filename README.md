@@ -1,4 +1,4 @@
-# 🔎 KURE: Korea University Retrieval Embedding models
+# 🔎 KURE: Korea University REtrieval models
 
 <p align="center" width="100%">
 <img src="assets/kure_logo.png" alt="KURE Logo" style="width: 50%;">
@@ -10,6 +10,7 @@
 
 ## Update Logs
 
+- 2026.10.12: [🤗 KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base) and [🤗 KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) released.
 - 2026.10.01: [🤗 KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base) and [🤗 KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) released.
 - 2026.08.29: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) released.
 - 2024.12.21: [🤗 KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1) released with the MTEB-ko-retrieval leaderboard.
@@ -19,6 +20,8 @@
 
 | Model | Type | Params | Base model |
 |---|---|---|---|
+| [KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base) | Learned Sparse Retrieval (LSR) | 593M | [omai-research/milco-650m](https://huggingface.co/omai-research/milco-650m) |
+| [KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) | Learned Sparse Retrieval (LSR) | 149M | [nlpai-lab/KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised) |
 | [KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base) | Reranker (cross-encoder) | 1.7B | [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B) |
 | [KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) | Reranker (cross-encoder) | 149M | [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) |
 | [KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) | Late-interaction (multi-vector) | 154M | [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) |
@@ -35,9 +38,35 @@ uv sync                                                # dense, sparse and cross
 uv sync --extra late-interaction --no-default-groups   # KURE-v2 with PyLate
 ```
 
-PyLate pins `sentence-transformers==5.3.0`, while the KURE-Reranker models need `>=5.6.1`, so the late-interaction stack installs into its own environment.
-
 ## Usage
+
+### KURE-Sparse
+
+<details>
+<summary><b>Sentence-Transformers</b></summary>
+
+```python
+from sentence_transformers import SparseEncoder
+
+model = SparseEncoder("nlpai-lab/KURE-Sparse-nano", trust_remote_code=True)
+# model = SparseEncoder("nlpai-lab/KURE-Sparse-base", trust_remote_code=True)
+
+query = "훈민정음은 언제 만들어졌나요?"
+documents = [
+    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
+    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
+    "한라산은 해발 1,947m로 남한에서 가장 높은 산이며 제주도 중앙에 자리한다.",
+]
+
+# encode_query / encode_document add the query and document markers KURE-Sparse-nano expects
+query_embeddings = model.encode_query(query)
+document_embeddings = model.encode_document(documents)
+
+# Dot-product scores (higher is more relevant)
+scores = model.similarity(query_embeddings, document_embeddings)
+```
+
+</details>
 
 ### KURE-Reranker
 
@@ -154,60 +183,78 @@ We evaluate on the nine **MTEB(kor, v2) Retrieval** tasks with the latest [mteb]
 - [LawIRKo](https://huggingface.co/datasets/on-and-on/lawgov_ir-ko): Korean statute / case-law retrieval
 - [SQuADKorV1Retrieval](https://huggingface.co/datasets/yjoonjang/squad_kor_v1): KorQuAD v1 passage retrieval
 
-Late-interaction models are measured directly with mteb + PLAID retrieval; dense rows come from the official [MTEB results repository](https://github.com/embeddings-benchmark/results). To evaluate a model yourself, pass its name and paradigm:
+Late-interaction models are measured directly with mteb + PLAID retrieval. Dense rows come from the official [MTEB results repository](https://github.com/embeddings-benchmark/results). To evaluate a model, pass its name and paradigm:
 
 ```bash
 uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.py nlpai-lab/KURE-v2 multi-vector
 uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
 ```
 
-The per-task result files backing the leaderboard are in [`eval/dense/results`](eval/dense/results), and the table below is regenerated from them:
-
-```bash
-uv run python eval/dense/make_leaderboard.py
-```
-
 ### MTEB-ko-retrieval Leaderboard
 
-Average over the nine tasks. Full per-task results are on the official [MTEB Leaderboard](https://mteb-leaderboard.hf.space/benchmark/MTEB(kor%2C%20v2)?types=Retrieval&s.summary=meanTask&d.summary=desc).
+Average over the nine tasks. Per-task scores are in [`eval/dense/results/README.md`](eval/dense/results/README.md) and on the official [MTEB Leaderboard](https://mteb-leaderboard.hf.space/benchmark/MTEB(kor%2C%20v2)?types=Retrieval&s.summary=meanTask&d.summary=desc).
 
 | Model | Type | Params | Avg nDCG@10 | Avg Recall@10 |
 |---|---|---:|---:|---:|
 | **[nlpai-lab/KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2)** | Late-interaction | 154M | **0.8160** | **0.8921** |
+| nvidia/Nemotron-3-Embed-8B-BF16 | Dense | 8.0B | 0.8127 | 0.8934 |
 | yjoonjang/colbert-ko-en-v2 | Late-interaction | 149M | 0.8063 | 0.8827 |
 | sionic-ai/comsat-embed-ko-8b-preview | Dense | 7.6B | 0.7927 | 0.8876 |
 | lightonai/mLateOn | Late-interaction | 307M | 0.7906 | 0.8740 |
 | Qwen/Qwen3-Embedding-8B | Dense | 7.6B | 0.7826 | 0.8815 |
+| nvidia/Nemotron-3-Embed-1B-BF16 | Dense | 1.1B | 0.7817 | 0.8690 |
 | Qwen/Qwen3-Embedding-4B | Dense | 4.0B | 0.7737 | 0.8753 |
+| perplexity-ai/pplx-embed-v1-4b | Dense | 4.0B | 0.7705 | 0.8699 |
 | microsoft/harrier-oss-v1-27b | Dense | 27.0B | 0.7667 | 0.8624 |
 | dragonkue/snowflake-arctic-embed-l-v2.0-ko | Dense | 568M | 0.7653 | 0.8609 |
 | codefuse-ai/F2LLM-v2-8B | Dense | 7.6B | 0.7638 | 0.8593 |
 | telepix/PIXIE-Rune-v1.5 | Dense | 568M | 0.7618 | 0.8596 |
 | **[nlpai-lab/KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1)** | Dense | 568M | 0.7616 | 0.8629 |
+| nvidia/llama-nemotron-embed-1b-v2 | Dense | 1.2B | 0.7564 | 0.8560 |
 | dragonkue/BGE-m3-ko | Dense | 568M | 0.7547 | 0.8513 |
 | BAAI/bge-m3 | Dense | 568M | 0.7509 | 0.8588 |
+| perplexity-ai/pplx-embed-v1-0.6b | Dense | 596M | 0.7390 | 0.8377 |
 | perplexity-ai/pplx-embed-v1-late-0.6b | Late-interaction | 596M | 0.7381 | 0.8328 |
 | **[nlpai-lab/KoE5](https://huggingface.co/nlpai-lab/KoE5)** | Dense | 560M | 0.7337 | 0.8300 |
 | **[nlpai-lab/KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised)** | Late-interaction | 154M | 0.7283 | 0.8268 |
+| Qwen/Qwen3-Embedding-0.6B | Dense | 596M | 0.7140 | 0.8222 |
 | dragonkue/colbert-ko-0.1b | Late-interaction | 149M | 0.6776 | 0.7723 |
 | yjoonjang/colbert-ko-v1 | Late-interaction | 149M | 0.6282 | 0.7212 |
 
+### Sparse Leaderboard
+
+Learned sparse models are evaluated on the same nine tasks under the same conventions, with mteb's `SparseEncoder` wrapper in bf16 at up to 8,192 tokens and without pruning the vectors. Next to nDCG@10, we report the average number of active dimensions per query and per document, and FLOPs. To evaluate a sparse model:
+
+```bash
+uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-nano
+```
+
+Results are averaged over the nine Korean retrieval tasks. The dashed lines mark dense models for reference. Per-task scores, along with English BEIR results, are in [`eval/sparse/results/README.md`](eval/sparse/results/README.md).
+
+<p align="center">
+  <img src="assets/sparse_ndcg_flops.png" width="80%" alt="Average nDCG@10 vs. average FLOPs of sparse retrievers on the nine Korean tasks">
+</p>
+
+| Model | Params | Avg nDCG@10 | Query dims | Document dims | FLOPs |
+|---|---:|---:|---:|---:|---:|
+| **[nlpai-lab/KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base)** | 593M | **0.7984** | 100 | 1,897 | 36.5 |
+| omai-research/milco-650m | 593M | 0.7824 | 105 | 1,167 | 32.3 |
+| **[nlpai-lab/KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano)** | 149M | 0.7716 | 147 | 843 | 23.0 |
+| telepix/PIXIE-Splade-v1.5 | 149M | 0.7608 | 117 | 1,541 | 37.3 |
+| yjoonjang/splade-ko-v1 | 149M | 0.7526 | 109 | 742 | 29.1 |
+| telepix/PIXIE-Splade-v1.0 | 149M | 0.6636 | 121 | 625 | 22.4 |
+| opensearch-project/opensearch-neural-sparse-encoding-multilingual-v1 | 167M | 0.5444 | 29 | 176 | 6.8 |
+
 ### Reranker Leaderboard
 
-Rerankers are evaluated on the same nine tasks with the protocol of [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark): each query's candidates are its gold documents plus, as negatives, the BM25 top-50 minus the golds (BelebeleRetrieval on its kor_Hang-kor_Hang subset), every model runs in bf16 at up to 8,192 tokens, and we report nDCG@10 with throughput in pairs per second (PPS), measured on one NVIDIA RTX A6000 48GB. To evaluate a reranker yourself:
+Rerankers are evaluated on the same nine tasks with the protocol of [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark): each query's candidates are its gold documents plus, as negatives, the BM25 top-50 minus the golds, every model runs in bf16 at up to 8,192 tokens, and we report nDCG@10 with throughput in pairs per second (PPS), measured on one NVIDIA RTX A6000 48GB. To evaluate a reranker:
 
 ```bash
 bash eval/cross-encoder/fetch_eval_assets.sh   # once: the BM25 candidate pools
 uv run python eval/cross-encoder/evaluate.py nlpai-lab/KURE-Reranker-nano --speed
 ```
 
-The per-task result files are in [`eval/cross-encoder/results`](eval/cross-encoder/results), and the table below is regenerated from them:
-
-```bash
-uv run python eval/cross-encoder/make_leaderboard.py
-```
-
-Mean over the nine tasks. Per-task nDCG@10 and PPS are in the [KURE-Reranker-base model card](https://huggingface.co/nlpai-lab/KURE-Reranker-base#korean-reranking-evaluation).
+Results are averaged over the nine Korean retrieval tasks. Per-task nDCG@10 and PPS are in [`eval/cross-encoder/results/README.md`](eval/cross-encoder/results/README.md).
 
 <p align="center">
   <img src="assets/reranker_pps_vs_ndcg.png" width="80%" alt="Mean nDCG@10 vs. mean PPS of rerankers on the nine Korean tasks">
@@ -234,6 +281,14 @@ Mean over the nine tasks. Per-task nDCG@10 and PPS are in the [KURE-Reranker-bas
 | telepix/PIXIE-Spell-Reranker-Preview-0.6B | 596M | 0.7760 | 99.7 |
 
 ## Training Details
+
+### KURE-Sparse
+
+Training code in [`train/sparse`](train/sparse).
+
+- Distilled from a Qwen3-Reranker-8B teacher on the KURE-v2 SFT data with an in-batch contrastive term plus a KL term over each query's candidates, an L1 sparsity penalty on queries and documents, up to 8,192 tokens, 1 epoch.
+- **KURE-Sparse-base**: fine-tuned from [omai-research/milco-650m](https://huggingface.co/omai-research/milco-650m), scoring over 30,522 English pivot terms plus 250,002 source-language tokens.
+- **KURE-Sparse-nano**: the A.X-Encoder-base MLM head grafted onto [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised), pre-finetuned on 20.7M pairs, then fine-tuned. Resulting in 36,282 vocabulary terms.
 
 ### KURE-Reranker
 

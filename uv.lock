@@ -890,7 +890,7 @@ train = [
 
 [package.dev-dependencies]
 st = [
-    { name = "sentence-transformers", version = "6.1.0", source = { registry = "https://pypi.org/simple" } },
+    { name = "sentence-transformers", version = "5.6.1", source = { registry = "https://pypi.org/simple" } },
     { name = "transformers", version = "5.14.1", source = { registry = "https://pypi.org/simple" } },
 ]
 
@@ -906,7 +906,7 @@ provides-extras = ["late-interaction", "train"]
 
 [package.metadata.requires-dev]
 st = [
-    { name = "sentence-transformers", specifier = ">=5.6.1" },
+    { name = "sentence-transformers", specifier = ">=5.6.1,<5.7" },
     { name = "transformers", specifier = ">=5.5,<5.15" },
 ]
 
@@ -1069,7 +1069,8 @@ dependencies = [
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*' or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
     { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
     { name = "sentence-transformers", version = "5.3.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-4-kure-late-interaction'" },
-    { name = "sentence-transformers", version = "6.1.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-4-kure-st' or extra != 'extra-4-kure-late-interaction'" },
+    { name = "sentence-transformers", version = "5.6.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-4-kure-st'" },
+    { name = "sentence-transformers", version = "6.1.0", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st') or (extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st')" },
     { name = "torch" },
     { name = "tqdm" },
     { name = "transformers", version = "5.3.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-4-kure-late-interaction'" },
@@ -3028,6 +3029,42 @@ wheels = [
 
 [[package]]
 name = "sentence-transformers"
+version = "5.6.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.14' and sys_platform == 'win32'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
+    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'emscripten'",
+    "python_full_version == '3.11.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.11'",
+]
+dependencies = [
+    { name = "huggingface-hub", marker = "extra == 'group-4-kure-st'" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version == '3.11.*' and extra == 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "scikit-learn", version = "1.7.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "scikit-learn", version = "1.9.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and extra == 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version == '3.11.*' and extra == 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "torch", marker = "extra == 'group-4-kure-st'" },
+    { name = "tqdm", marker = "extra == 'group-4-kure-st'" },
+    { name = "transformers", version = "5.14.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-4-kure-st'" },
+    { name = "typing-extensions", marker = "extra == 'group-4-kure-st'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/75/80/573ab31b77bdfa8f18051188adff3405e928386287cd6f756eff5777dd82/sentence_transformers-5.6.1.tar.gz", hash = "sha256:16af5d682ef66672b076d58599a23905800e850ec2bfb1865938306bf684ad72", size = 452185, upload-time = "2026-07-23T14:40:41.589Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c1/ad/8f73f512dc7ad4031d2b64cbb67f70bdfb355756afbe0db610a5146415c1/sentence_transformers-5.6.1-py3-none-any.whl", hash = "sha256:cefbb17b6325a982a4732c8c49fb013375392687049d1de3d435c4b04060680b", size = 596677, upload-time = "2026-07-23T14:40:40.312Z" },
+]
+
+[[package]]
+name = "sentence-transformers"
 version = "6.1.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
@@ -3043,22 +3080,20 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 dependencies = [
-    { name = "huggingface-hub", marker = "extra == 'group-4-kure-st' or extra != 'extra-4-kure-late-interaction'" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra != 'extra-4-kure-late-interaction') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version == '3.11.*' and extra != 'extra-4-kure-late-interaction') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
-    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra != 'extra-4-kure-late-interaction') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
-    { name = "scikit-learn", version = "1.7.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra != 'extra-4-kure-late-interaction') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
-    { name = "scikit-learn", version = "1.9.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and extra != 'extra-4-kure-late-interaction') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
-    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra != 'extra-4-kure-late-interaction') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
-    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version == '3.11.*' and extra != 'extra-4-kure-late-interaction') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
-    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra != 'extra-4-kure-late-interaction') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
-    { name = "tokenizers", version = "0.22.2", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-4-kure-st'" },
+    { name = "huggingface-hub", marker = "(extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st') or (extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st')" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version == '3.11.*' and extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "scikit-learn", version = "1.7.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "scikit-learn", version = "1.9.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version == '3.11.*' and extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st') or (extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st')" },
     { name = "tokenizers", version = "0.23.2", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st') or (extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st')" },
-    { name = "torch", marker = "extra == 'group-4-kure-st' or extra != 'extra-4-kure-late-interaction'" },
-    { name = "tqdm", marker = "extra == 'group-4-kure-st' or extra != 'extra-4-kure-late-interaction'" },
-    { name = "transformers", version = "5.14.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-4-kure-st'" },
+    { name = "torch", marker = "(extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st') or (extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st')" },
+    { name = "tqdm", marker = "(extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st') or (extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st')" },
     { name = "transformers", version = "5.19.0", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st') or (extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st')" },
-    { name = "typing-extensions", marker = "extra == 'group-4-kure-st' or extra != 'extra-4-kure-late-interaction'" },
+    { name = "typing-extensions", marker = "(extra == 'extra-4-kure-late-interaction' and extra == 'group-4-kure-st') or (extra != 'extra-4-kure-late-interaction' and extra != 'group-4-kure-st')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c4/a1/53ae87971817e2d8370f8e79b843a881be33ab339502d71c5f82ac31f7af/sentence_transformers-6.1.0.tar.gz", hash = "sha256:299025df51550dc1a38f05be27a9b0bf881c4e5e70542b3b7757d05e00aa3868", size = 576566, upload-time = "2026-09-18T10:44:24.279Z" }
 wheels = [
