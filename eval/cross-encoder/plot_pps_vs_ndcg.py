@@ -183,7 +183,7 @@ def main() -> None:
 
     piecewise_log_scale(ax)
     xs, ys = [p[0] for p in pts], [p[1] for p in pts]
-    ax.set_xlim(9, max(xs) * 2.3)
+    ax.set_xlim(9, max(xs) * 3.6)  # right headroom so the KURE-Reranker-nano label stays inside
     ax.set_ylim(min(ys) - 0.02, max(ys) + 0.03)  # headroom for the legend
     ax.set_xlabel("Mean PPS (pairs/s)", fontsize=14, color=INK)
     ax.set_ylabel("Mean nDCG@10", fontsize=14, color=INK)

@@ -194,7 +194,7 @@ Average over the nine tasks. Full per-task results are on the official [MTEB Lea
 
 ### Reranker Leaderboard
 
-Rerankers are evaluated on the same nine tasks with the protocol of [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark): each query's candidates are all of its gold documents plus the BM25 top-50, every model runs in bf16 at up to 8,192 tokens, and we report nDCG@10 with throughput in pairs per second (PPS), measured on one NVIDIA RTX A6000 48GB. To evaluate a reranker yourself:
+Rerankers are evaluated on the same nine tasks with the protocol of [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark): each query's candidates are its gold documents plus, as negatives, the BM25 top-50 minus the golds (BelebeleRetrieval on its kor_Hang-kor_Hang subset), every model runs in bf16 at up to 8,192 tokens, and we report nDCG@10 with throughput in pairs per second (PPS), measured on one NVIDIA RTX A6000 48GB. To evaluate a reranker yourself:
 
 ```bash
 bash eval/cross-encoder/fetch_eval_assets.sh   # once: the BM25 candidate pools
@@ -215,23 +215,23 @@ Mean over the nine tasks. Per-task nDCG@10 and PPS are in the [KURE-Reranker-bas
 
 | Model | Params | Mean nDCG@10 | Mean PPS |
 |---|---:|---:|---:|
-| Qwen/Qwen3-Reranker-8B | 8.2B | 0.9030 | 15.2 |
-| KaLM-Embedding/KaLM-Reranker-V1-Large-R2 | 7.5B | 0.8960 | 25.3 |
-| Qwen/Qwen3-Reranker-4B | 4.0B | 0.8957 | 24.3 |
-| **[nlpai-lab/KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base)** | 1.7B | **0.8849** | 55.1 |
-| **[nlpai-lab/KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano)** | 149M | **0.8808** | **473.7** |
-| zeroentropy/zerank-2-reranker | 4.0B | 0.8695 | 29.4 |
-| lightonai/LightOn-rerank-PW-4B | 4.5B | 0.8664 | 15.0 |
-| mixedbread-ai/mxbai-rerank-large-v2 | 1.5B | 0.8661 | 65.2 |
-| BAAI/bge-reranker-v2-m3 | 568M | 0.8586 | 404.1 |
-| Qwen/Qwen3-Reranker-0.6B | 596M | 0.8577 | 100.2 |
-| nvidia/llama-nemotron-rerank-1b-v2 | 1.2B | 0.8522 | 127.3 |
-| nlpai-lab/LAMAR-600m | 568M | 0.8406 | 408.8 |
-| dragonkue/bge-reranker-v2-m3-ko | 568M | 0.8263 | 401.5 |
-| BAAI/bge-reranker-v2-gemma | 2.5B | 0.8186 | 58.7 |
-| upskyy/ko-reranker-8k | 568M | 0.8085 | 404.0 |
-| Dongjin-kr/ko-reranker | 560M | 0.7950 | 482.8 |
-| telepix/PIXIE-Spell-Reranker-Preview-0.6B | 596M | 0.7806 | 99.6 |
+| Qwen/Qwen3-Reranker-8B | 8.2B | 0.8990 | 15.0 |
+| Qwen/Qwen3-Reranker-4B | 4.0B | 0.8916 | 24.3 |
+| KaLM-Embedding/KaLM-Reranker-V1-Large-R2 | 7.5B | 0.8910 | 25.3 |
+| **[nlpai-lab/KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base)** | 1.7B | **0.8800** | 55.0 |
+| **[nlpai-lab/KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano)** | 149M | **0.8757** | **482.4** |
+| zeroentropy/zerank-2-reranker | 4.0B | 0.8652 | 29.3 |
+| mixedbread-ai/mxbai-rerank-large-v2 | 1.5B | 0.8607 | 64.8 |
+| lightonai/LightOn-rerank-PW-4B | 4.5B | 0.8605 | 15.1 |
+| Qwen/Qwen3-Reranker-0.6B | 596M | 0.8528 | 101.0 |
+| BAAI/bge-reranker-v2-m3 | 568M | 0.8518 | 412.6 |
+| nvidia/llama-nemotron-rerank-1b-v2 | 1.2B | 0.8468 | 128.2 |
+| nlpai-lab/LAMAR-600m | 568M | 0.8375 | 415.0 |
+| dragonkue/bge-reranker-v2-m3-ko | 568M | 0.8199 | 409.1 |
+| BAAI/bge-reranker-v2-gemma | 2.5B | 0.8099 | 58.8 |
+| upskyy/ko-reranker-8k | 568M | 0.8054 | 409.8 |
+| Dongjin-kr/ko-reranker | 560M | 0.7861 | 488.0 |
+| telepix/PIXIE-Spell-Reranker-Preview-0.6B | 596M | 0.7760 | 99.7 |
 
 ## Training Details
 

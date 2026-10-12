@@ -1,7 +1,8 @@
 """Evaluate a reranker (CrossEncoder) on the nine MTEB(kor, v2) retrieval tasks, reranking.
 
-Follows instructkr/reranker-simple-benchmark: for each query the reranker scores {all gold docs}
-union {BM25 top-50 negatives} (the benchmark's cached stage-1 pools, see fetch_eval_assets.sh), and
+Follows instructkr/reranker-simple-benchmark: for each query the reranker scores its gold docs plus,
+as negatives, the BM25 top-50 minus the golds (the benchmark's cached stage-1 pools, see
+fetch_eval_assets.sh); BelebeleRetrieval is scored on its kor_Hang-kor_Hang subset only. Then
 mteb 2.x computes NDCG@10. Injecting the golds means a gold the BM25 stage missed is still rankable,
 so the score measures the reranker, not BM25 recall. Every model runs in bf16 at max_length
 min(8192, the model's own limit), with flash_attention_2 where the architecture supports it.
@@ -36,7 +37,8 @@ from sentence_transformers.evaluation import SentenceEvaluator  # noqa: E402
 HERE = Path(__file__).resolve().parent
 POOL_DIR = HERE / "stage1_pools"
 RESULTS = HERE / "results"
-NEG_TOP_K = 50          # golds + BM25 top-50 negatives, per the benchmark
+NEG_TOP_K = 50          # BM25 pool top-50; the non-gold ones are the negatives, per the benchmark
+POOL_ALIGN_MIN = 0.99   # share of queries whose pool[0] is their gold; below it the pool's query ids are off
 MAX_LENGTH = 8192       # the benchmark's common length, capped at each model's own limit
 TASKS = ["Ko-StrategyQA", "AutoRAGRetrieval", "PublicHealthQA", "BelebeleRetrieval",
          "MIRACLRetrieval", "MrTidyRetrieval", "MultiLongDocRetrieval", "SQuADKorV1Retrieval", "LawIRKo"]
@@ -77,6 +79,13 @@ def _gold_inject_evaluate_subset(self, model, data_split, *, hf_split, hf_subset
     cids = _ids(corpus)
     qids = ([str(q) for q in queries.keys()] if hasattr(queries, "keys")
             else [str(r.get("id") if hasattr(r, "get") else r) for r in queries])
+    # Pools store each query's golds first, so pool[0] not being the query's gold means the pool's query ids
+    # do not match the task's (e.g. a pool built with mteb 1.x's set()-ordered ids): stop instead of scoring
+    # every query against another query's candidates.
+    aligned = sum(bool(pool.get(q)) and pool[q][0] in (rels.get(q, {}) if hasattr(rels, "get") else {}) for q in qids)
+    if aligned < POOL_ALIGN_MIN * len(qids):
+        raise ValueError(f"{self.metadata.name}[{hf_subset}/{hf_split}]: pool[0] is the gold for only {aligned}/"
+                         f"{len(qids)} queries; re-run fetch_eval_assets.sh for the current pools")
     top_ranked: dict[str, list[str]] = {}
     for qid in qids:
         golds = [g for g in (rels.get(qid, {}) if hasattr(rels, "get") else {}) if g in cids]
@@ -91,7 +100,10 @@ AbsTaskRetrieval._evaluate_subset = _gold_inject_evaluate_subset
 
 
 def get_task(task_name: str):
-    tasks = mteb.get_tasks(tasks=[task_name], languages=["kor-Hang"]) or mteb.get_tasks(tasks=[task_name])
+    # Korean-only subsets: BelebeleRetrieval keeps kor_Hang-kor_Hang (its kor<->eng subsets have no Korean BM25
+    # pool); every other task's subsets are unchanged.
+    tasks = (mteb.get_tasks(tasks=[task_name], languages=["kor-Hang"], exclusive_language_filter=True)
+             or mteb.get_tasks(tasks=[task_name]))
     return tasks[0]
 
 
