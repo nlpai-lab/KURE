@@ -10,7 +10,7 @@
 
 ## Update Logs
 
-- 2026.10.XX: [🤗 KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base), [🤗 KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) 공개.
+- 2026.10.12: [🤗 KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base), [🤗 KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) 공개.
 - 2026.10.01: [🤗 KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base), [🤗 KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) 공개.
 - 2026.08.29: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) 공개.
 - 2024.12.21: [🤗 KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1), MTEB-ko-retrieval 리더보드 공개
@@ -189,12 +189,6 @@ uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.p
 uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
 ```
 
-리더보드를 뒷받침하는 태스크별 결과 파일은 [`eval/dense/results`](eval/dense/results)에 있으며, 아래 표는 그 파일들로부터 재생성됩니다:
-
-```bash
-uv run python eval/dense/make_leaderboard.py
-```
-
 ### MTEB-ko-retrieval Leaderboard
 
 9개 태스크 평균입니다. 태스크별 결과는 [`eval/dense/results/README.md`](eval/dense/results/README.md)와 공식 [MTEB 리더보드](https://mteb-leaderboard.hf.space/benchmark/MTEB(kor%2C%20v2)?types=Retrieval&s.summary=meanTask&d.summary=desc)에서 확인할 수 있습니다.
@@ -228,19 +222,13 @@ uv run python eval/dense/make_leaderboard.py
 
 ### Sparse Leaderboard
 
-Learned sparse 모델은 같은 9개 태스크를 같은 기준으로, mteb의 `SparseEncoder` wrapper를 사용해 bf16, 최대 8,192 토큰에서 벡터 pruning 없이 평가합니다. nDCG@10과 함께 질의·문서당 평균 활성 차원 수와, 질의-문서 내적 한 번에 필요한 곱셈-덧셈의 기댓값인 FLOPs를 보고합니다. 직접 평가하려면 다음을 실행합니다:
+Learned sparse 모델은 같은 9개 태스크를 같은 기준으로, mteb의 `SparseEncoder` wrapper를 사용해 bf16, 최대 8,192 토큰에서 벡터 pruning 없이 평가합니다. nDCG@10과 함께 질의·문서당 평균 활성 차원 수와 FLOPs를 보고합니다. 직접 평가하려면 다음을 실행합니다:
 
 ```bash
 uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-nano
 ```
 
-태스크별 결과 파일은 [`eval/sparse/results`](eval/sparse/results)에 있으며, 아래 표는 그 파일들로부터 재생성됩니다:
-
-```bash
-uv run python eval/sparse/make_leaderboard.py
-```
-
-9개 태스크 평균입니다. 점선은 참고용 dense 모델입니다. 태스크별 결과와 영어 BEIR 결과는 [`eval/sparse/results/README.md`](eval/sparse/results/README.md)에 있습니다.
+결과는 9개 한국어 검색 태스크의 평균입니다. 점선은 참고용 dense 모델입니다. 태스크별 결과와 영어 BEIR 결과는 [`eval/sparse/results/README.md`](eval/sparse/results/README.md)에 있습니다.
 
 <p align="center">
   <img src="assets/sparse_ndcg_flops.png" width="80%" alt="9개 한국어 태스크에서 sparse 검색 모델의 평균 nDCG@10 대비 평균 FLOPs">
@@ -258,20 +246,14 @@ uv run python eval/sparse/make_leaderboard.py
 
 ### Reranker Leaderboard
 
-Reranker는 같은 9개 태스크에서 [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark) 프로토콜로 평가합니다: 각 질의의 후보는 정답 문서와, negative 로 BM25 상위 50개 중 정답을 뺀 나머지이며(BelebeleRetrieval 은 kor_Hang-kor_Hang subset), 모든 모델을 bf16, 최대 8,192 토큰으로 실행하고, nDCG@10과 초당 처리 쌍 수(PPS, NVIDIA RTX A6000 48GB 1대)를 보고합니다. 직접 평가하려면 다음을 실행합니다:
+Reranker는 같은 9개 태스크에서 [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark) 프로토콜로 평가합니다: 각 질의의 후보는 정답 문서와, negative 로 BM25 상위 50개 중 정답을 뺀 나머지이며, 모든 모델을 bf16, 최대 8,192 토큰으로 실행하고, nDCG@10과 초당 처리 쌍 수(PPS, NVIDIA RTX A6000 48GB 1대)를 보고합니다. 직접 평가하려면 다음을 실행합니다:
 
 ```bash
 bash eval/cross-encoder/fetch_eval_assets.sh   # 최초 1회: BM25 후보 pool
 uv run python eval/cross-encoder/evaluate.py nlpai-lab/KURE-Reranker-nano --speed
 ```
 
-태스크별 결과 파일은 [`eval/cross-encoder/results`](eval/cross-encoder/results)에 있으며, 아래 표는 그 파일들로부터 재생성됩니다:
-
-```bash
-uv run python eval/cross-encoder/make_leaderboard.py
-```
-
-9개 태스크 평균입니다. 태스크별 nDCG@10과 PPS는 [`eval/cross-encoder/results/README.md`](eval/cross-encoder/results/README.md)에 있습니다.
+결과는 9개 한국어 검색 태스크의 평균입니다. 태스크별 nDCG@10과 PPS는 [`eval/cross-encoder/results/README.md`](eval/cross-encoder/results/README.md)에 있습니다.
 
 <p align="center">
   <img src="assets/reranker_pps_vs_ndcg.png" width="80%" alt="9개 한국어 태스크에서 reranker의 평균 nDCG@10 대비 평균 PPS">
@@ -305,7 +287,7 @@ uv run python eval/cross-encoder/make_leaderboard.py
 
 - KURE-v2 SFT 데이터에서 Qwen3-Reranker-8B 교사로부터, in-batch 대조 학습과 질의별 후보에 대한 KL 증류를 결합하고 질의·문서 모두에 L1 sparsity 페널티를 주어 최대 8,192 토큰으로 1 에폭 학습합니다.
 - **KURE-Sparse-base**: [omai-research/milco-650m](https://huggingface.co/omai-research/milco-650m)에서 fine-tuning. 영어 pivot 어휘 30,522개와 원문 토큰 250,002개 위에서 점수화.
-- **KURE-Sparse-nano**: [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised)에 A.X-Encoder-base의 MLM 헤드를 이식하고 2,070만 쌍으로 사전학습한 뒤 fine-tuning. 어휘 36,282개.
+- **KURE-Sparse-nano**: [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised)에 A.X-Encoder-base의 MLM 헤드를 이식하고 2,070만 쌍으로 사전학습한 뒤 fine-tuning. 그 결과 어휘는 36,282개입니다.
 
 ### KURE-Reranker
 

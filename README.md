@@ -10,7 +10,7 @@
 
 ## Update Logs
 
-- 2026.10.XX: [🤗 KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base) and [🤗 KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) released.
+- 2026.10.12: [🤗 KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base) and [🤗 KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) released.
 - 2026.10.01: [🤗 KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base) and [🤗 KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) released.
 - 2026.08.29: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) released.
 - 2024.12.21: [🤗 KURE-v1](https://huggingface.co/nlpai-lab/KURE-v1) released with the MTEB-ko-retrieval leaderboard.
@@ -190,12 +190,6 @@ uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.p
 uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
 ```
 
-The per-task result files backing the leaderboard are in [`eval/dense/results`](eval/dense/results), and the table below is regenerated from them:
-
-```bash
-uv run python eval/dense/make_leaderboard.py
-```
-
 ### MTEB-ko-retrieval Leaderboard
 
 Average over the nine tasks. Per-task scores are in [`eval/dense/results/README.md`](eval/dense/results/README.md) and on the official [MTEB Leaderboard](https://mteb-leaderboard.hf.space/benchmark/MTEB(kor%2C%20v2)?types=Retrieval&s.summary=meanTask&d.summary=desc).
@@ -229,19 +223,13 @@ Average over the nine tasks. Per-task scores are in [`eval/dense/results/README.
 
 ### Sparse Leaderboard
 
-Learned sparse models are evaluated on the same nine tasks under the same conventions, with mteb's `SparseEncoder` wrapper in bf16 at up to 8,192 tokens and without pruning the vectors. Next to nDCG@10, we report the average number of active dimensions per query and per document, and FLOPs, the expected number of multiply-adds per query-document dot product. To evaluate a sparse model:
+Learned sparse models are evaluated on the same nine tasks under the same conventions, with mteb's `SparseEncoder` wrapper in bf16 at up to 8,192 tokens and without pruning the vectors. Next to nDCG@10, we report the average number of active dimensions per query and per document, and FLOPs. To evaluate a sparse model:
 
 ```bash
 uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-nano
 ```
 
-The per-task result files are in [`eval/sparse/results`](eval/sparse/results), and the table below is regenerated from them:
-
-```bash
-uv run python eval/sparse/make_leaderboard.py
-```
-
-Average over the nine tasks. The dashed lines mark dense models for reference. Per-task scores, along with English BEIR results, are in [`eval/sparse/results/README.md`](eval/sparse/results/README.md).
+Results are averaged over the nine Korean retrieval tasks. The dashed lines mark dense models for reference. Per-task scores, along with English BEIR results, are in [`eval/sparse/results/README.md`](eval/sparse/results/README.md).
 
 <p align="center">
   <img src="assets/sparse_ndcg_flops.png" width="80%" alt="Average nDCG@10 vs. average FLOPs of sparse retrievers on the nine Korean tasks">
@@ -259,20 +247,14 @@ Average over the nine tasks. The dashed lines mark dense models for reference. P
 
 ### Reranker Leaderboard
 
-Rerankers are evaluated on the same nine tasks with the protocol of [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark): each query's candidates are its gold documents plus, as negatives, the BM25 top-50 minus the golds (BelebeleRetrieval on its kor_Hang-kor_Hang subset), every model runs in bf16 at up to 8,192 tokens, and we report nDCG@10 with throughput in pairs per second (PPS), measured on one NVIDIA RTX A6000 48GB. To evaluate a reranker:
+Rerankers are evaluated on the same nine tasks with the protocol of [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark): each query's candidates are its gold documents plus, as negatives, the BM25 top-50 minus the golds, every model runs in bf16 at up to 8,192 tokens, and we report nDCG@10 with throughput in pairs per second (PPS), measured on one NVIDIA RTX A6000 48GB. To evaluate a reranker:
 
 ```bash
 bash eval/cross-encoder/fetch_eval_assets.sh   # once: the BM25 candidate pools
 uv run python eval/cross-encoder/evaluate.py nlpai-lab/KURE-Reranker-nano --speed
 ```
 
-The per-task result files are in [`eval/cross-encoder/results`](eval/cross-encoder/results), and the table below is regenerated from them:
-
-```bash
-uv run python eval/cross-encoder/make_leaderboard.py
-```
-
-Mean over the nine tasks. Per-task nDCG@10 and PPS are in [`eval/cross-encoder/results/README.md`](eval/cross-encoder/results/README.md).
+Results are averaged over the nine Korean retrieval tasks. Per-task nDCG@10 and PPS are in [`eval/cross-encoder/results/README.md`](eval/cross-encoder/results/README.md).
 
 <p align="center">
   <img src="assets/reranker_pps_vs_ndcg.png" width="80%" alt="Mean nDCG@10 vs. mean PPS of rerankers on the nine Korean tasks">
@@ -306,7 +288,7 @@ Training code in [`train/sparse`](train/sparse).
 
 - Distilled from a Qwen3-Reranker-8B teacher on the KURE-v2 SFT data with an in-batch contrastive term plus a KL term over each query's candidates, an L1 sparsity penalty on queries and documents, up to 8,192 tokens, 1 epoch.
 - **KURE-Sparse-base**: fine-tuned from [omai-research/milco-650m](https://huggingface.co/omai-research/milco-650m), scoring over 30,522 English pivot terms plus 250,002 source-language tokens.
-- **KURE-Sparse-nano**: the A.X-Encoder-base MLM head grafted onto [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised), pre-finetuned on 20.7M pairs, then fine-tuned; 36,282 vocabulary terms.
+- **KURE-Sparse-nano**: the A.X-Encoder-base MLM head grafted onto [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised), pre-finetuned on 20.7M pairs, then fine-tuned. Resulting in 36,282 vocabulary terms.
 
 ### KURE-Reranker
 
