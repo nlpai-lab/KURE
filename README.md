@@ -206,7 +206,7 @@ Average over the nine tasks. Per-task scores are in [`eval/dense/results/README.
 | **[nlpai-lab/KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2)** | Late-interaction | 154M | **0.8160** | **0.8921** |
 | nvidia/Nemotron-3-Embed-8B-BF16 | Dense | 8.0B | 0.8127 | 0.8934 |
 | yjoonjang/colbert-ko-en-v2 | Late-interaction | 149M | 0.8063 | 0.8827 |
-| **[nlpai-lab/KURE-v3](https://huggingface.co/nlpai-lab/KURE-v3)** | Dense | 1.1B | 0.7976 | 0.8803 |
+| **[nlpai-lab/KURE-v3](https://huggingface.co/nlpai-lab/KURE-v3)** | Dense | 1.1B | 0.8027 | 0.8857 |
 | sionic-ai/comsat-embed-ko-8b-preview | Dense | 7.6B | 0.7927 | 0.8876 |
 | lightonai/mLateOn | Late-interaction | 307M | 0.7906 | 0.8740 |
 | Qwen/Qwen3-Embedding-8B | Dense | 7.6B | 0.7826 | 0.8815 |
@@ -225,10 +225,16 @@ Average over the nine tasks. Per-task scores are in [`eval/dense/results/README.
 | perplexity-ai/pplx-embed-v1-late-0.6b | Late-interaction | 596M | 0.7381 | 0.8328 |
 | **[nlpai-lab/KoE5](https://huggingface.co/nlpai-lab/KoE5)** | Dense | 560M | 0.7337 | 0.8300 |
 | **[nlpai-lab/KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised)** | Late-interaction | 154M | 0.7283 | 0.8268 |
-| google/embeddinggemma-300m | Dense | 308M | 0.7270 | 0.8400 |
+| google/embeddinggemma-300m | Dense | 308M | 0.7254 | 0.8383 |
 | Qwen/Qwen3-Embedding-0.6B | Dense | 596M | 0.7140 | 0.8222 |
 | dragonkue/colbert-ko-0.1b | Late-interaction | 149M | 0.6776 | 0.7723 |
 | yjoonjang/colbert-ko-v1 | Late-interaction | 149M | 0.6282 | 0.7212 |
+
+Truncated to 1,024 dimensions, KURE-v3 keeps 99% of its full-size score and still outperforms comsat-embed-ko-8b-preview and Qwen3-Embedding-8B (4,096 dimensions). Per-dimension scores are in [`eval/dense/results/README.md`](eval/dense/results/README.md#kure-v3-at-matryoshka-dimensions).
+
+<p align="center">
+  <img src="assets/kure_v3_mrl.png" width="70%" alt="Average nDCG@10 of KURE-v3 on MTEB(kor, v2) Retrieval at each Matryoshka dimension">
+</p>
 
 </details>
 
