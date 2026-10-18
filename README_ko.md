@@ -179,7 +179,7 @@ uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.p
   <img src="assets/kure_v3_mrl.png" width="70%" alt="Average nDCG@10 of KURE-v3 on MTEB(kor, v2) Retrieval at each Matryoshka dimension">
 </p>
 
-#### RTEB (eng)
+### RTEB (eng)
 
 Dense와 late-interaction 모델은 영어 검색 벤치마크인 [RTEB](https://huggingface.co/blog/rteb)에서도 평가합니다. 코드 도메인을 제외한 공개 태스크 8개를 사용하므로, 비공개 태스크와 코드 태스크까지 포함하는 RTEB 리더보드 점수와는 다릅니다. 태스크별 점수는 [`eval/dense/results/README.md`](eval/dense/results/README.md)에 있습니다.
 
@@ -218,30 +218,20 @@ uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-nano
 | telepix/PIXIE-Splade-v1.0 | 149M | 0.6636 | 121 | 625 | 22.4 |
 | opensearch-project/opensearch-neural-sparse-encoding-multilingual-v1 | 167M | 0.5444 | 29 | 176 | 6.8 |
 
-#### RTEB (eng)
+### English Retrieval (BEIR, RTEB)
 
-Dense 모델과 같은 RTEB 공개 태스크 8개의 nDCG@10이며, FLOPs는 태스크 평균입니다.
+Sparse 모델은 영어 벤치마크 두 개에서도 nDCG@10으로 평가합니다. BEIR 13개 태스크(BEIR-13)와, 코드 도메인을 제외한 [RTEB](https://huggingface.co/blog/rteb)의 **공개 영어 태스크 8개**입니다. SparseUp은 자체 길이 제한(쿼리 128, 문서 512 토큰)으로, 나머지 모델은 최대 8,192 토큰으로 평가합니다. RTEB 평균은 비공개 태스크와 코드 태스크까지 포함하는 RTEB 리더보드 점수와 다릅니다.
 
 ```bash
+uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-base --suite beir_eng --max-seq-length 8192
 uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-base --suite rteb_eng --max-seq-length 8192
 ```
 
 <p align="center">
-  <img src="assets/rteb_sparse.png" width="70%" alt="Average nDCG@10 on the public RTEB English tasks of sparse retrievers">
+  <img src="assets/beir_rteb_sparse.png" width="100%" alt="Average nDCG@10 on BEIR-13 and on the public RTEB English tasks of sparse retrievers">
 </p>
 
-| Model | Params | Avg nDCG@10 | FLOPs |
-|---|---:|---:|---:|
-| **[nlpai-lab/KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base)** | 593M | **0.5093** | 277.6 |
-| utahnlp/laconic-1b | 1.2B | 0.5092 | 53.5 |
-| Linkup-Platform/linkup-sparseup-embed-v1 | 188M | 0.4941 | 25.1 |
-| **[nlpai-lab/KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano)** | 149M | 0.4750 | 109.9 |
-| opensearch-project/opensearch-neural-sparse-encoding-doc-v3-gte | 137M | 0.4721 | 12.7 |
-| naver/splade-v3 | 110M | 0.4596 | 35.0 |
-| omai-research/milco-650m | 593M | 0.4301 | 163.7 |
-| telepix/PIXIE-Splade-v1.5 | 149M | 0.3630 | 391.3 |
-
-영어 BEIR-13 결과는 [`eval/sparse/results/README.md`](eval/sparse/results/README.md)에 있습니다.
+태스크별 결과는 [`eval/sparse/results/README.md`](eval/sparse/results/README.md)에 있습니다.
 
 </details>
 

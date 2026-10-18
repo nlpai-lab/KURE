@@ -180,7 +180,7 @@ Truncated to 1,024 dimensions, KURE-v3 keeps 99% of its full-size score and stil
   <img src="assets/kure_v3_mrl.png" width="70%" alt="Average nDCG@10 of KURE-v3 on MTEB(kor, v2) Retrieval at each Matryoshka dimension">
 </p>
 
-#### RTEB (eng)
+### RTEB (eng)
 
 Dense and late-interaction models are also evaluated on [RTEB](https://huggingface.co/blog/rteb), an English retrieval benchmark, using its eight public tasks outside the code domain. The average differs from the RTEB leaderboard score, which also covers private and code tasks. Per-task scores are in [`eval/dense/results/README.md`](eval/dense/results/README.md).
 
@@ -219,30 +219,20 @@ Results are averaged over the nine Korean retrieval tasks. The dashed lines mark
 | telepix/PIXIE-Splade-v1.0 | 149M | 0.6636 | 121 | 625 | 22.4 |
 | opensearch-project/opensearch-neural-sparse-encoding-multilingual-v1 | 167M | 0.5444 | 29 | 176 | 6.8 |
 
-#### RTEB (eng)
+### English Retrieval (BEIR, RTEB)
 
-On the same eight public RTEB tasks as the dense models, nDCG@10 with FLOPs averaged over the tasks.
+Sparse models are also evaluated on two English benchmarks with nDCG@10: the 13 BEIR tasks (BEIR-13), and the **eight public English** tasks of [RTEB](https://huggingface.co/blog/rteb) outside the code domain. SparseUp runs at its own length limits (128 query and 512 document tokens), and the other models at up to 8,192 tokens. The RTEB average differs from the RTEB leaderboard score, which also covers private and code tasks.
 
 ```bash
+uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-base --suite beir_eng --max-seq-length 8192
 uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-base --suite rteb_eng --max-seq-length 8192
 ```
 
 <p align="center">
-  <img src="assets/rteb_sparse.png" width="70%" alt="Average nDCG@10 on the public RTEB English tasks of sparse retrievers">
+  <img src="assets/beir_rteb_sparse.png" width="100%" alt="Average nDCG@10 on BEIR-13 and on the public RTEB English tasks of sparse retrievers">
 </p>
 
-| Model | Params | Avg nDCG@10 | FLOPs |
-|---|---:|---:|---:|
-| **[nlpai-lab/KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base)** | 593M | **0.5093** | 277.6 |
-| utahnlp/laconic-1b | 1.2B | 0.5092 | 53.5 |
-| Linkup-Platform/linkup-sparseup-embed-v1 | 188M | 0.4941 | 25.1 |
-| **[nlpai-lab/KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano)** | 149M | 0.4750 | 109.9 |
-| opensearch-project/opensearch-neural-sparse-encoding-doc-v3-gte | 137M | 0.4721 | 12.7 |
-| naver/splade-v3 | 110M | 0.4596 | 35.0 |
-| omai-research/milco-650m | 593M | 0.4301 | 163.7 |
-| telepix/PIXIE-Splade-v1.5 | 149M | 0.3630 | 391.3 |
-
-English BEIR-13 results are in [`eval/sparse/results/README.md`](eval/sparse/results/README.md).
+Per-task scores are in [`eval/sparse/results/README.md`](eval/sparse/results/README.md).
 
 </details>
 
