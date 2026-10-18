@@ -221,6 +221,7 @@ Average over the nine tasks. Per-task scores are in [`eval/dense/results/README.
 | nvidia/llama-nemotron-embed-1b-v2 | Dense | 1.2B | 0.7564 | 0.8560 |
 | dragonkue/BGE-m3-ko | Dense | 568M | 0.7547 | 0.8513 |
 | BAAI/bge-m3 | Dense | 568M | 0.7509 | 0.8588 |
+| jinaai/jina-embeddings-v5-text-small-retrieval | Dense | 596M | 0.7419 | 0.8434 |
 | perplexity-ai/pplx-embed-v1-0.6b | Dense | 596M | 0.7390 | 0.8377 |
 | perplexity-ai/pplx-embed-v1-late-0.6b | Late-interaction | 596M | 0.7381 | 0.8328 |
 | **[nlpai-lab/KoE5](https://huggingface.co/nlpai-lab/KoE5)** | Dense | 560M | 0.7337 | 0.8300 |
