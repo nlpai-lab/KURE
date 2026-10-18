@@ -41,10 +41,37 @@ uv sync --extra late-interaction --no-default-groups   # KURE-v2 (PyLate)
 
 ## Usage
 
-### KURE-Sparse
+### KURE-Dense
 
-<details>
-<summary><b>Sentence-Transformers</b></summary>
+```python
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer("nlpai-lab/KURE-v3", model_kwargs={"attn_implementation": "flash_attention_2"})
+# model = SentenceTransformer("nlpai-lab/KURE-v3", model_kwargs={"attn_implementation": "flash_attention_2"}, truncate_dim=1024)  # 더 작은 Matryoshka 벡터
+
+# KURE-v2는 late-interaction 모델로 sentence-transformers>=6.0이 필요합니다:
+# from sentence_transformers import MultiVectorEncoder
+# model = MultiVectorEncoder("nlpai-lab/KURE-v2")
+
+# model = SentenceTransformer("nlpai-lab/KURE-v1")
+# model = SentenceTransformer("nlpai-lab/KoE5", prompts={"query": "query: ", "document": "passage: "})
+
+query = "훈민정음은 언제 만들어졌나요?"
+documents = [
+    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
+    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
+    "한라산은 해발 1,947m로 남한에서 가장 높은 산이며 제주도 중앙에 자리한다.",
+]
+
+# encode_query / encode_document가 모델별 질의·문서 프롬프트를 붙여줍니다
+query_embeddings = model.encode_query(query)
+document_embeddings = model.encode_document(documents)
+
+# 높을수록 관련성 높음 (KURE-v2는 MaxSim, 나머지는 코사인)
+scores = model.similarity(query_embeddings, document_embeddings)
+```
+
+### KURE-Sparse
 
 ```python
 from sentence_transformers import SparseEncoder
@@ -67,12 +94,7 @@ document_embeddings = model.encode_document(documents)
 scores = model.similarity(query_embeddings, document_embeddings)
 ```
 
-</details>
-
 ### KURE-Reranker
-
-<details>
-<summary><b>Sentence-Transformers</b></summary>
 
 ```python
 from sentence_transformers import CrossEncoder
@@ -90,85 +112,6 @@ documents = [
 # 점수가 높을수록 관련성 높음
 results = model.rank(query, documents, return_documents=True)
 ```
-
-</details>
-
-### KURE-v2
-
-<details>
-<summary><b>PyLate</b></summary>
-
-```bash
-uv add pylate
-```
-
-```python
-from pylate import indexes, models, retrieve
-
-model = models.ColBERT(model_name_or_path="nlpai-lab/KURE-v2")
-
-index = indexes.PLAID(index_folder="pylate-index", index_name="index", override=True)
-
-documents_ids = ["1", "2", "3"]
-documents = [
-    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
-    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
-    "한라산은 해발 1,947m로 남한에서 가장 높은 산이며 제주도 중앙에 자리한다.",
-]
-
-documents_embeddings = model.encode(documents, is_query=False)
-index.add_documents(documents_ids=documents_ids, documents_embeddings=documents_embeddings)
-
-retriever = retrieve.ColBERT(index=index)
-queries_embeddings = model.encode(["훈민정음은 언제 만들어졌나요?"], is_query=True)
-scores = retriever.retrieve(queries_embeddings=queries_embeddings, k=10)
-```
-
-</details>
-
-<details>
-<summary><b>Sentence-Transformers</b></summary>
-
-```bash
-uv add sentence-transformers
-```
-
-```python
-from sentence_transformers import MultiVectorEncoder
-
-model = MultiVectorEncoder("nlpai-lab/KURE-v2")
-
-query = "훈민정음은 언제 만들어졌나요?"
-documents = [
-    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
-    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
-]
-
-query_embeddings = model.encode_query(query)
-document_embeddings = model.encode_document(documents)
-
-# MaxSim 후기 상호작용 점수 (높을수록 관련성 높음)
-scores = model.similarity(query_embeddings, document_embeddings)
-```
-
-</details>
-
-### KURE-v1 / KoE5
-
-<details>
-<summary><b>Sentence-Transformers</b></summary>
-
-```python
-from sentence_transformers import SentenceTransformer
-
-model = SentenceTransformer("nlpai-lab/KURE-v1")
-# model = SentenceTransformer("nlpai-lab/KoE5")  # "query: " / "passage: " prefix 필요
-
-embeddings = model.encode(["첫 번째 문장", "두 번째 문장"])
-similarities = model.similarity(embeddings, embeddings)
-```
-
-</details>
 
 ## Evaluation
 
@@ -236,6 +179,18 @@ uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
   <img src="assets/kure_v3_mrl.png" width="70%" alt="Average nDCG@10 of KURE-v3 on MTEB(kor, v2) Retrieval at each Matryoshka dimension">
 </p>
 
+#### RTEB (eng)
+
+Dense와 late-interaction 모델은 영어 검색 벤치마크인 [RTEB](https://huggingface.co/blog/rteb)에서도 평가합니다. 코드 도메인을 제외한 공개 태스크 8개를 사용하므로, 비공개 태스크와 코드 태스크까지 포함하는 RTEB 리더보드 점수와는 다릅니다. 태스크별 점수는 [`eval/dense/results/README.md`](eval/dense/results/README.md)에 있습니다.
+
+```bash
+uv run python eval/dense/evaluate.py nlpai-lab/KURE-v3 single-vector --suite rteb_eng
+```
+
+<p align="center">
+  <img src="assets/rteb_dense_late_interaction.png" width="100%" alt="Average nDCG@10 on the public RTEB English tasks of dense and late-interaction retrievers">
+</p>
+
 </details>
 
 <details>
@@ -247,7 +202,7 @@ Learned sparse 모델은 같은 9개 태스크를 같은 기준으로, mteb의 `
 uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-nano
 ```
 
-결과는 9개 한국어 검색 태스크의 평균입니다. 점선은 참고용 dense 모델입니다. 태스크별 결과와 영어 BEIR 결과는 [`eval/sparse/results/README.md`](eval/sparse/results/README.md)에 있습니다.
+결과는 9개 한국어 검색 태스크의 평균입니다. 점선은 참고용 dense 모델입니다. 태스크별 결과와 영어 BEIR, RTEB 결과는 [`eval/sparse/results/README.md`](eval/sparse/results/README.md)에 있습니다.
 
 <p align="center">
   <img src="assets/sparse_ndcg_flops.png" width="80%" alt="9개 한국어 태스크에서 sparse 검색 모델의 평균 nDCG@10 대비 평균 FLOPs">
@@ -262,6 +217,31 @@ uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-nano
 | yjoonjang/splade-ko-v1 | 149M | 0.7526 | 109 | 742 | 29.1 |
 | telepix/PIXIE-Splade-v1.0 | 149M | 0.6636 | 121 | 625 | 22.4 |
 | opensearch-project/opensearch-neural-sparse-encoding-multilingual-v1 | 167M | 0.5444 | 29 | 176 | 6.8 |
+
+#### RTEB (eng)
+
+Dense 모델과 같은 RTEB 공개 태스크 8개의 nDCG@10이며, FLOPs는 태스크 평균입니다.
+
+```bash
+uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-base --suite rteb_eng --max-seq-length 8192
+```
+
+<p align="center">
+  <img src="assets/rteb_sparse.png" width="70%" alt="Average nDCG@10 on the public RTEB English tasks of sparse retrievers">
+</p>
+
+| Model | Params | Avg nDCG@10 | FLOPs |
+|---|---:|---:|---:|
+| **[nlpai-lab/KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base)** | 593M | **0.5093** | 277.6 |
+| utahnlp/laconic-1b | 1.2B | 0.5092 | 53.5 |
+| Linkup-Platform/linkup-sparseup-embed-v1 | 188M | 0.4941 | 25.1 |
+| **[nlpai-lab/KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano)** | 149M | 0.4750 | 109.9 |
+| opensearch-project/opensearch-neural-sparse-encoding-doc-v3-gte | 137M | 0.4721 | 12.7 |
+| naver/splade-v3 | 110M | 0.4596 | 35.0 |
+| omai-research/milco-650m | 593M | 0.4301 | 163.7 |
+| telepix/PIXIE-Splade-v1.5 | 149M | 0.3630 | 391.3 |
+
+영어 BEIR-13 결과는 [`eval/sparse/results/README.md`](eval/sparse/results/README.md)에 있습니다.
 
 </details>
 
@@ -280,26 +260,6 @@ uv run python eval/cross-encoder/evaluate.py nlpai-lab/KURE-Reranker-nano --spee
 <p align="center">
   <img src="assets/reranker_pps_vs_ndcg.png" width="80%" alt="9개 한국어 태스크에서 reranker의 평균 nDCG@10 대비 평균 PPS">
 </p>
-
-| Model | Params | Mean nDCG@10 | Mean PPS |
-|---|---:|---:|---:|
-| Qwen/Qwen3-Reranker-8B | 8.2B | 0.8990 | 15.0 |
-| Qwen/Qwen3-Reranker-4B | 4.0B | 0.8916 | 24.3 |
-| KaLM-Embedding/KaLM-Reranker-V1-Large-R2 | 7.5B | 0.8910 | 25.3 |
-| **[nlpai-lab/KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base)** | 1.7B | **0.8800** | 55.0 |
-| **[nlpai-lab/KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano)** | 149M | **0.8757** | **482.4** |
-| zeroentropy/zerank-2-reranker | 4.0B | 0.8652 | 29.3 |
-| mixedbread-ai/mxbai-rerank-large-v2 | 1.5B | 0.8607 | 64.8 |
-| lightonai/LightOn-rerank-PW-4B | 4.5B | 0.8605 | 15.1 |
-| Qwen/Qwen3-Reranker-0.6B | 596M | 0.8528 | 101.0 |
-| BAAI/bge-reranker-v2-m3 | 568M | 0.8518 | 412.6 |
-| nvidia/llama-nemotron-rerank-1b-v2 | 1.2B | 0.8468 | 128.2 |
-| nlpai-lab/LAMAR-600m | 568M | 0.8375 | 415.0 |
-| dragonkue/bge-reranker-v2-m3-ko | 568M | 0.8199 | 409.1 |
-| BAAI/bge-reranker-v2-gemma | 2.5B | 0.8099 | 58.8 |
-| upskyy/ko-reranker-8k | 568M | 0.8054 | 409.8 |
-| Dongjin-kr/ko-reranker | 560M | 0.7861 | 488.0 |
-| telepix/PIXIE-Spell-Reranker-Preview-0.6B | 596M | 0.7760 | 99.7 |
 
 </details>
 

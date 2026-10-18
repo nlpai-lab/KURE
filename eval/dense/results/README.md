@@ -1,7 +1,10 @@
-# MTEB(kor, v2) retrieval results
+# Dense retrieval results
+
+Korean results are in `<model>/mteb_kor`, English RTEB results in `<model>/rteb_eng`.
 
 ```bash
-uv run python eval/dense/make_leaderboard.py
+uv run python eval/dense/make_leaderboard_mteb_kor.py   # MTEB(kor, v2)
+uv run python eval/dense/make_leaderboard_rteb_eng.py   # RTEB
 ```
 
 ## Per-task nDCG@10
@@ -47,3 +50,28 @@ Embeddings truncated to their first N dimensions (`truncate_dim`). nDCG@10 per t
 | 768 | 0.7911 | 0.8752 | 0.9129 | 0.8685 | 0.8090 | 0.8002 | 0.9607 | 0.9626 | 0.6142 | 0.4582 | 0.7335 |
 | 512 | 0.7834 | 0.8656 | 0.9135 | 0.8569 | 0.8038 | 0.7941 | 0.9555 | 0.9622 | 0.5992 | 0.4382 | 0.7270 |
 | 256 | 0.7547 | 0.8479 | 0.9034 | 0.8554 | 0.7709 | 0.7593 | 0.9322 | 0.9373 | 0.5777 | 0.3648 | 0.6913 |
+
+## RTEB(eng): per-task nDCG@10
+
+The eight public non-code tasks of RTEB(eng, beta). Each task score is the mean over its splits and subsets, so the average is not the RTEB leaderboard number, which also covers RTEB's private and code tasks.
+
+| Model | Type | Params | Avg | CUREv1 | ChatDoctor | FinQA | AILACasedocs | LegalSummarization | HC3Finance | FinanceBench | AILAStatutes |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| nvidia/Nemotron-3-Embed-8B-BF16 | Dense | 8.0B | **0.7390** | **0.6691** | 0.7695 | **0.8849** | **0.4908** | **0.7677** | **0.7990** | **0.9502** | 0.5804 |
+| sionic-ai/comsat-embed-ko-8b-preview | Dense | 7.6B | 0.6921 | 0.5983 | 0.7337 | 0.6476 | 0.4689 | 0.6987 | 0.7084 | 0.8430 | **0.8385** |
+| Qwen/Qwen3-Embedding-8B | Dense | 7.6B | 0.6861 | 0.6084 | 0.7323 | 0.6339 | 0.4409 | 0.7069 | 0.7196 | 0.8280 | 0.8190 |
+| **nlpai-lab/KURE-v3** | Dense | 1.1B | 0.6859 | 0.6315 | 0.6713 | 0.8632 | 0.4267 | 0.7180 | 0.7018 | 0.8753 | 0.5997 |
+| perplexity-ai/pplx-embed-v1-4b | Dense | 4.0B | 0.6812 | 0.5637 | 0.7407 | 0.8358 | 0.4546 | 0.6806 | 0.7289 | 0.8438 | 0.6012 |
+| nvidia/Nemotron-3-Embed-1B-BF16 | Dense | 1.1B | 0.6650 | 0.5960 | 0.6809 | 0.8242 | 0.4287 | 0.7267 | 0.6444 | 0.8540 | 0.5649 |
+| Qwen/Qwen3-Embedding-4B | Dense | 4.0B | 0.6549 | 0.5684 | 0.7138 | 0.6339 | 0.3938 | 0.6612 | 0.6877 | 0.7662 | 0.8140 |
+| codefuse-ai/F2LLM-v2-8B | Dense | 7.6B | 0.6403 | 0.5356 | **0.7975** | 0.6108 | 0.4498 | 0.6499 | 0.7596 | 0.8744 | 0.4448 |
+| perplexity-ai/pplx-embed-v1-0.6b | Dense | 596M | 0.6369 | 0.5578 | 0.6885 | 0.7333 | 0.3865 | 0.6804 | 0.6822 | 0.7875 | 0.5788 |
+| jinaai/jina-embeddings-v5-text-small-retrieval | Dense | 596M | 0.6069 | 0.5364 | 0.7113 | 0.5563 | 0.4378 | 0.6485 | 0.6220 | 0.8076 | 0.5352 |
+| Qwen/Qwen3-Embedding-0.6B | Dense | 596M | 0.5802 | 0.4603 | 0.6208 | 0.5740 | 0.3525 | 0.6234 | 0.5471 | 0.7375 | 0.7261 |
+| lightonai/mLateOn | Late-interaction | 307M | 0.5720 | 0.6124 | 0.6024 | 0.7887 | 0.2721 | 0.6831 | 0.6501 | 0.7722 | 0.1952 |
+| google/embeddinggemma-300m | Dense | 308M | 0.5531 | 0.5713 | 0.6342 | 0.5437 | 0.3468 | 0.6833 | 0.5997 | 0.7748 | 0.2706 |
+| telepix/PIXIE-Rune-v1.5 | Dense | 568M | 0.5457 | 0.5494 | 0.5976 | 0.6228 | 0.3590 | 0.6711 | 0.5252 | 0.7865 | 0.2540 |
+| perplexity-ai/pplx-embed-v1-late-0.6b | Late-interaction | 596M | 0.5246 | 0.5392 | 0.4097 | 0.6860 | 0.2432 | 0.6695 | 0.6757 | 0.7089 | 0.2648 |
+| **nlpai-lab/KURE-v1** | Dense | 568M | 0.5202 | 0.5214 | 0.5665 | 0.5977 | 0.3685 | 0.6300 | 0.5080 | 0.7457 | 0.2235 |
+| BAAI/bge-m3 | Dense | 568M | 0.5151 | 0.5191 | 0.5797 | 0.5570 | 0.3597 | 0.6329 | 0.5100 | 0.6667 | 0.2961 |
+| **nlpai-lab/KURE-v2** | Late-interaction | 154M | 0.4504 | 0.3502 | 0.3671 | 0.7870 | 0.1782 | 0.6316 | 0.4694 | 0.6780 | 0.1415 |
