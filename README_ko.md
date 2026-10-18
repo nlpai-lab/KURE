@@ -131,15 +131,15 @@ results = model.rank(query, documents, return_documents=True)
 - [LawIRKo](https://huggingface.co/datasets/on-and-on/lawgov_ir-ko): 한국어 법령·판례 검색
 - [SQuADKorV1Retrieval](https://huggingface.co/datasets/yjoonjang/squad_kor_v1): KorQuAD v1 문단 검색
 
-후기 상호작용 모델은 mteb + PLAID 검색으로 직접 측정하고, 밀집 모델 행은 공식 [MTEB results 저장소](https://github.com/embeddings-benchmark/results)의 점수를 사용합니다. 직접 평가하려면 모델명과 paradigm을 넘기면 됩니다:
-
-```bash
-uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.py nlpai-lab/KURE-v2 multi-vector
-uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
-```
-
 <details>
 <summary><h3>Dense Leaderboard</h3></summary>
+
+Dense 모델은 mteb으로, late-interaction 모델은 mteb + PLAID (4-bit) 검색으로 평가합니다. 공식 [MTEB results 저장소](https://github.com/embeddings-benchmark/results)에 결과가 있는 모델은 그 점수를 쓰고, 나머지는 `eval/dense/evaluate.py`로 직접 평가합니다. 모델 이름과 paradigm을 넘겨 평가할 수 있습니다:
+
+```bash
+uv run python eval/dense/evaluate.py nlpai-lab/KURE-v3 single-vector
+uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.py nlpai-lab/KURE-v2 multi-vector
+```
 
 9개 태스크 평균입니다. 태스크별 결과는 [`eval/dense/results/README.md`](eval/dense/results/README.md)와 공식 [MTEB 리더보드](https://mteb-leaderboard.hf.space/benchmark/MTEB(kor%2C%20v2)?types=Retrieval&s.summary=meanTask&d.summary=desc)에서 확인할 수 있습니다.
 

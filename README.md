@@ -132,15 +132,15 @@ We evaluate on the nine **MTEB(kor, v2) Retrieval** tasks with the latest [mteb]
 - [LawIRKo](https://huggingface.co/datasets/on-and-on/lawgov_ir-ko): Korean statute / case-law retrieval
 - [SQuADKorV1Retrieval](https://huggingface.co/datasets/yjoonjang/squad_kor_v1): KorQuAD v1 passage retrieval
 
-Late-interaction models are measured directly with mteb + PLAID retrieval. Dense rows come from the official [MTEB results repository](https://github.com/embeddings-benchmark/results). To evaluate a model, pass its name and paradigm:
-
-```bash
-uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.py nlpai-lab/KURE-v2 multi-vector
-uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
-```
-
 <details>
 <summary><h3>Dense Leaderboard</h3></summary>
+
+Dense models are evaluated with mteb, and late-interaction models with mteb + PLAID (4-bit) retrieval. Models with results in the official [MTEB results repository](https://github.com/embeddings-benchmark/results) use those scores, and the others are run with `eval/dense/evaluate.py`. To evaluate a model, pass its name and paradigm:
+
+```bash
+uv run python eval/dense/evaluate.py nlpai-lab/KURE-v3 single-vector
+uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.py nlpai-lab/KURE-v2 multi-vector
+```
 
 Average over the nine tasks. Per-task scores are in [`eval/dense/results/README.md`](eval/dense/results/README.md) and on the official [MTEB Leaderboard](https://mteb-leaderboard.hf.space/benchmark/MTEB(kor%2C%20v2)?types=Retrieval&s.summary=meanTask&d.summary=desc).
 
