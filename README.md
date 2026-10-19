@@ -10,7 +10,7 @@
 
 ## Update Logs
 
-- 2026.10.15: [🤗 KURE-v3](https://huggingface.co/nlpai-lab/KURE-v3) released.
+- 2026.10.20: [🤗 KURE-v3](https://huggingface.co/nlpai-lab/KURE-v3) released with [API](https://kure.kullm.ai/).
 - 2026.10.12: [🤗 KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base) and [🤗 KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) released.
 - 2026.10.01: [🤗 KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base) and [🤗 KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) released.
 - 2026.08.29: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) released.
@@ -41,6 +41,59 @@ uv sync --extra late-interaction --no-default-groups   # KURE-v2 with PyLate
 ```
 
 ## Usage
+
+### API
+
+KURE-v3, KURE-Sparse-{base, nano} and KURE-Reranker-nano are served at [kure.kullm.ai](https://kure.kullm.ai/). Sign in with GitHub there to get an API key.
+Each request takes up to 8 texts (100 documents for reranking).
+
+| Endpoint | Models |
+|---|---|
+| `/embeddings` | `kure-v3` |
+| `/sparse-embeddings` | `kure-sparse-base`, `kure-sparse-nano` |
+| `/rerank` | `kure-reranker-nano` |
+
+```python
+import os
+
+import requests
+from openai import OpenAI
+
+BASE_URL = "https://kure.kullm.ai/api/v1"
+API_KEY = os.environ["KURE_API_KEY"]
+
+query = "훈민정음은 언제 만들어졌나요?"
+documents = [
+    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
+    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
+    "한라산은 해발 1,947m로 남한에서 가장 높은 산이며 제주도 중앙에 자리한다.",
+]
+
+# KURE-v3 (OpenAI-compatible). input_type adds the query or document prompt. Vectors are 2048-d, pass dimensions=(256 to 2048) for a smaller Matryoshka size
+client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
+query_embedding = client.embeddings.create(
+    model="kure-v3", input=query, extra_body={"input_type": "query"}
+)
+document_embeddings = client.embeddings.create(
+    model="kure-v3", input=documents, extra_body={"input_type": "document"}
+)
+
+headers = {"Authorization": f"Bearer {API_KEY}"}
+
+# KURE-Sparse returns vocabulary ids (indices) and their weights (values)
+sparse = requests.post(
+    f"{BASE_URL}/sparse-embeddings",
+    headers=headers,
+    json={"model": "kure-sparse-nano", "input": documents, "input_type": "document"},
+).json()
+
+# KURE-Reranker returns the documents sorted by relevance_score (0 to 1, higher is more relevant)
+ranked = requests.post(
+    f"{BASE_URL}/rerank",
+    headers=headers,
+    json={"model": "kure-reranker-nano", "query": query, "documents": documents},
+).json()
+```
 
 ### KURE-Dense
 

@@ -5,7 +5,7 @@ https://github.com/embeddings-benchmark/results/pull/654; this runs its nine ret
 Pass --all-tasks for all twenty, or --tasks to name specific ones. --suite runs an English set instead:
 beir_eng, the 13 BEIR tasks plus MS MARCO (dev), as SparseUp reports them, or rteb_eng, the eight public
 non-code tasks of RTEB(eng, beta). Vectors are used as the model produces them, with no max_active_dims
-pruning unless --max-active-dims asks for it (LACONIC's own encoder keeps the top 512).
+pruning unless --max-active-dims asks for it. The reported results use none.
 
 Results go under eval/sparse/results/<model>/<suite>/ (suite = mteb_kor, beir_eng or rteb_eng), one mteb
 result file per task, and eval/sparse/make_leaderboard_<suite>.py turns them into the leaderboards.
@@ -22,7 +22,7 @@ rather than reimplemented.
     uv run python eval/sparse/evaluate.py output/kure-sparse-base/final --tasks PublicHealthQA
     uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-base --suite beir_eng --max-seq-length 8192
     uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-base --suite rteb_eng --max-seq-length 8192
-    uv run python eval/sparse/evaluate.py utahnlp/laconic-1b --suite rteb_eng --revision refs/pr/1 --max-active-dims 512
+    uv run python eval/sparse/evaluate.py utahnlp/laconic-1b --suite rteb_eng --revision refs/pr/1 --max-seq-length 8192
 """
 
 from __future__ import annotations
@@ -261,7 +261,7 @@ def main() -> None:
                              "rteb_eng: the public non-code RTEB(eng) tasks")
     parser.add_argument("--revision", default=None, help="Hub revision, e.g. refs/pr/1")
     parser.add_argument("--max-active-dims", type=int, default=None,
-                        help="Keep the top-k dims per vector, for a model whose own usage prunes (LACONIC: 512)")
+                        help="Keep the top-k dims per vector (unset for the reported results)")
     parser.add_argument("--all-tasks", action="store_true", help="Include the non-retrieval tasks")
     parser.add_argument("--tasks", nargs="+", help="Run only these task names")
     parser.add_argument("--overwrite", action="store_true", help="Redo tasks already on disk")

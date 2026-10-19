@@ -10,7 +10,7 @@
 
 ## Update Logs
 
-- 2026.10.15: [🤗 KURE-v3](https://huggingface.co/nlpai-lab/KURE-v3) 공개.
+- 2026.10.20: [🤗 KURE-v3](https://huggingface.co/nlpai-lab/KURE-v3) 및 [API](https://kure.kullm.ai/) 공개.
 - 2026.10.12: [🤗 KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base), [🤗 KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) 공개.
 - 2026.10.01: [🤗 KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base), [🤗 KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) 공개.
 - 2026.08.29: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) 공개.
@@ -40,6 +40,59 @@ uv sync --extra late-interaction --no-default-groups   # KURE-v2 (PyLate)
 ```
 
 ## Usage
+
+### API
+
+KURE-v3, KURE-Sparse-{base, nano}, KURE-Reranker-nano는 [kure.kullm.ai](https://kure.kullm.ai/)에서 API로 제공됩니다. GitHub로 로그인하면 API 키를 발급받을 수 있습니다.
+요청 한 번에 텍스트를 최대 8개(리랭킹은 문서 100개)까지 보낼 수 있습니다.
+
+| Endpoint | 모델 |
+|---|---|
+| `/embeddings` | `kure-v3` |
+| `/sparse-embeddings` | `kure-sparse-base`, `kure-sparse-nano` |
+| `/rerank` | `kure-reranker-nano` |
+
+```python
+import os
+
+import requests
+from openai import OpenAI
+
+BASE_URL = "https://kure.kullm.ai/api/v1"
+API_KEY = os.environ["KURE_API_KEY"]
+
+query = "훈민정음은 언제 만들어졌나요?"
+documents = [
+    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
+    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
+    "한라산은 해발 1,947m로 남한에서 가장 높은 산이며 제주도 중앙에 자리한다.",
+]
+
+# KURE-v3 (OpenAI 호환). input_type이 질의·문서 프롬프트를 붙입니다. 기본 2048차원이고, dimensions=(256~2048)로 더 작은 Matryoshka 차원을 고를 수 있습니다
+client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
+query_embedding = client.embeddings.create(
+    model="kure-v3", input=query, extra_body={"input_type": "query"}
+)
+document_embeddings = client.embeddings.create(
+    model="kure-v3", input=documents, extra_body={"input_type": "document"}
+)
+
+headers = {"Authorization": f"Bearer {API_KEY}"}
+
+# KURE-Sparse는 어휘 번호(indices)와 가중치(values)를 돌려줍니다
+sparse = requests.post(
+    f"{BASE_URL}/sparse-embeddings",
+    headers=headers,
+    json={"model": "kure-sparse-nano", "input": documents, "input_type": "document"},
+).json()
+
+# KURE-Reranker는 문서를 relevance_score 순으로 돌려줍니다 (0~1, 높을수록 관련성 높음)
+ranked = requests.post(
+    f"{BASE_URL}/rerank",
+    headers=headers,
+    json={"model": "kure-reranker-nano", "query": query, "documents": documents},
+).json()
+```
 
 ### KURE-Dense
 
