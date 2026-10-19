@@ -1,0 +1,46 @@
+{
+    "loader_kwargs": {
+        "trust_remote_code": true
+    },
+    "name": "perplexity-ai/pplx-embed-v1-late-0.6b",
+    "revision": "35e14f7c0f85720323342965e72f119dc1a937c0",
+    "release_date": "2026-03-13",
+    "languages": null,
+    "n_parameters": 595778560,
+    "n_active_parameters_override": null,
+    "n_embedding_parameters": 155311104,
+    "memory_usage_mb": 2272.0,
+    "max_tokens": 512.0,
+    "embed_dim": 128,
+    "license": "mit",
+    "open_weights": true,
+    "public_training_code": null,
+    "public_training_data": null,
+    "framework": [
+        "PyLate",
+        "ColBERT",
+        "Sentence Transformers",
+        "safetensors"
+    ],
+    "reference": "https://huggingface.co/perplexity-ai/pplx-embed-v1-late-0.6b",
+    "similarity_fn_name": "MaxSim",
+    "use_instructions": false,
+    "training_datasets": null,
+    "adapted_from": "perplexity-ai/pplx-embed-v1-0.6b",
+    "superseded_by": null,
+    "modalities": [
+        "text"
+    ],
+    "model_type": [
+        "late-interaction"
+    ],
+    "citation": null,
+    "contacts": null,
+    "experiment_kwargs": null,
+    "output_dtypes": null,
+    "extra_requirements_groups": [
+        "pylate"
+    ],
+    "loader": "MultiVectorModel",
+    "is_cross_encoder": false
+}

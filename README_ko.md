@@ -10,6 +10,7 @@
 
 ## Update Logs
 
+- 2026.10.20: [🤗 KURE-v3](https://huggingface.co/nlpai-lab/KURE-v3) 및 [API](https://kure.kullm.ai/) 공개.
 - 2026.10.12: [🤗 KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base), [🤗 KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) 공개.
 - 2026.10.01: [🤗 KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base), [🤗 KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano) 공개.
 - 2026.08.29: [🤗 KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2) 공개.
@@ -20,6 +21,7 @@
 
 | Model | Type | Params | Base model |
 |---|---|---|---|
+| [KURE-v3](https://huggingface.co/nlpai-lab/KURE-v3) | Dense (single-vector) | 1.1B | [nvidia/Nemotron-3-Embed-1B-BF16](https://huggingface.co/nvidia/Nemotron-3-Embed-1B-BF16) |
 | [KURE-Sparse-base](https://huggingface.co/nlpai-lab/KURE-Sparse-base) | Learned Sparse Retrieval (LSR) | 593M | [omai-research/milco-650m](https://huggingface.co/omai-research/milco-650m) |
 | [KURE-Sparse-nano](https://huggingface.co/nlpai-lab/KURE-Sparse-nano) | Learned Sparse Retrieval (LSR) | 149M | [nlpai-lab/KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised) |
 | [KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base) | Reranker (cross-encoder) | 1.7B | [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B) |
@@ -39,10 +41,90 @@ uv sync --extra late-interaction --no-default-groups   # KURE-v2 (PyLate)
 
 ## Usage
 
-### KURE-Sparse
+### API
 
-<details>
-<summary><b>Sentence-Transformers</b></summary>
+KURE-v3, KURE-Sparse-{base, nano}, KURE-Reranker-nano는 [kure.kullm.ai](https://kure.kullm.ai/)에서 API로 제공됩니다. GitHub로 로그인하면 API 키를 발급받을 수 있습니다.
+요청 한 번에 텍스트를 최대 8개(리랭킹은 문서 100개)까지 보낼 수 있습니다.
+
+| Endpoint | 모델 |
+|---|---|
+| `/embeddings` | `kure-v3` |
+| `/sparse-embeddings` | `kure-sparse-base`, `kure-sparse-nano` |
+| `/rerank` | `kure-reranker-nano` |
+
+```python
+import os
+
+import requests
+from openai import OpenAI
+
+BASE_URL = "https://kure.kullm.ai/api/v1"
+API_KEY = os.environ["KURE_API_KEY"]
+
+query = "훈민정음은 언제 만들어졌나요?"
+documents = [
+    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
+    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
+    "한라산은 해발 1,947m로 남한에서 가장 높은 산이며 제주도 중앙에 자리한다.",
+]
+
+# KURE-v3 (OpenAI 호환). input_type이 질의·문서 프롬프트를 붙입니다. 기본 2048차원이고, dimensions=(256~2048)로 더 작은 Matryoshka 차원을 고를 수 있습니다
+client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
+query_embedding = client.embeddings.create(
+    model="kure-v3", input=query, extra_body={"input_type": "query"}
+)
+document_embeddings = client.embeddings.create(
+    model="kure-v3", input=documents, extra_body={"input_type": "document"}
+)
+
+headers = {"Authorization": f"Bearer {API_KEY}"}
+
+# KURE-Sparse는 어휘 번호(indices)와 가중치(values)를 돌려줍니다
+sparse = requests.post(
+    f"{BASE_URL}/sparse-embeddings",
+    headers=headers,
+    json={"model": "kure-sparse-nano", "input": documents, "input_type": "document"},
+).json()
+
+# KURE-Reranker는 문서를 relevance_score 순으로 돌려줍니다 (0~1, 높을수록 관련성 높음)
+ranked = requests.post(
+    f"{BASE_URL}/rerank",
+    headers=headers,
+    json={"model": "kure-reranker-nano", "query": query, "documents": documents},
+).json()
+```
+
+### KURE-Dense
+
+```python
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer("nlpai-lab/KURE-v3", model_kwargs={"attn_implementation": "flash_attention_2"})
+# model = SentenceTransformer("nlpai-lab/KURE-v3", model_kwargs={"attn_implementation": "flash_attention_2"}, truncate_dim=1024)  # 더 작은 Matryoshka 벡터
+
+# KURE-v2는 late-interaction 모델로 sentence-transformers>=6.0이 필요합니다:
+# from sentence_transformers import MultiVectorEncoder
+# model = MultiVectorEncoder("nlpai-lab/KURE-v2")
+
+# model = SentenceTransformer("nlpai-lab/KURE-v1")
+# model = SentenceTransformer("nlpai-lab/KoE5", prompts={"query": "query: ", "document": "passage: "})
+
+query = "훈민정음은 언제 만들어졌나요?"
+documents = [
+    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
+    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
+    "한라산은 해발 1,947m로 남한에서 가장 높은 산이며 제주도 중앙에 자리한다.",
+]
+
+# encode_query / encode_document가 모델별 질의·문서 프롬프트를 붙여줍니다
+query_embeddings = model.encode_query(query)
+document_embeddings = model.encode_document(documents)
+
+# 높을수록 관련성 높음 (KURE-v2는 MaxSim, 나머지는 코사인)
+scores = model.similarity(query_embeddings, document_embeddings)
+```
+
+### KURE-Sparse
 
 ```python
 from sentence_transformers import SparseEncoder
@@ -65,12 +147,7 @@ document_embeddings = model.encode_document(documents)
 scores = model.similarity(query_embeddings, document_embeddings)
 ```
 
-</details>
-
 ### KURE-Reranker
-
-<details>
-<summary><b>Sentence-Transformers</b></summary>
 
 ```python
 from sentence_transformers import CrossEncoder
@@ -89,86 +166,11 @@ documents = [
 results = model.rank(query, documents, return_documents=True)
 ```
 
-</details>
-
-### KURE-v2
-
-<details>
-<summary><b>PyLate</b></summary>
-
-```bash
-uv add pylate
-```
-
-```python
-from pylate import indexes, models, retrieve
-
-model = models.ColBERT(model_name_or_path="nlpai-lab/KURE-v2")
-
-index = indexes.PLAID(index_folder="pylate-index", index_name="index", override=True)
-
-documents_ids = ["1", "2", "3"]
-documents = [
-    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
-    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
-    "한라산은 해발 1,947m로 남한에서 가장 높은 산이며 제주도 중앙에 자리한다.",
-]
-
-documents_embeddings = model.encode(documents, is_query=False)
-index.add_documents(documents_ids=documents_ids, documents_embeddings=documents_embeddings)
-
-retriever = retrieve.ColBERT(index=index)
-queries_embeddings = model.encode(["훈민정음은 언제 만들어졌나요?"], is_query=True)
-scores = retriever.retrieve(queries_embeddings=queries_embeddings, k=10)
-```
-
-</details>
-
-<details>
-<summary><b>Sentence-Transformers</b></summary>
-
-```bash
-uv add sentence-transformers
-```
-
-```python
-from sentence_transformers import MultiVectorEncoder
-
-model = MultiVectorEncoder("nlpai-lab/KURE-v2")
-
-query = "훈민정음은 언제 만들어졌나요?"
-documents = [
-    "세종대왕은 1443년에 훈민정음을 창제하고 1446년에 이를 반포하였다.",
-    "김치는 배추나 무를 소금에 절인 뒤 고춧가루와 젓갈을 넣어 발효시킨 음식이다.",
-]
-
-query_embeddings = model.encode_query(query)
-document_embeddings = model.encode_document(documents)
-
-# MaxSim 후기 상호작용 점수 (높을수록 관련성 높음)
-scores = model.similarity(query_embeddings, document_embeddings)
-```
-
-</details>
-
-### KURE-v1 / KoE5
-
-<details>
-<summary><b>Sentence-Transformers</b></summary>
-
-```python
-from sentence_transformers import SentenceTransformer
-
-model = SentenceTransformer("nlpai-lab/KURE-v1")
-# model = SentenceTransformer("nlpai-lab/KoE5")  # "query: " / "passage: " prefix 필요
-
-embeddings = model.encode(["첫 번째 문장", "두 번째 문장"])
-similarities = model.similarity(embeddings, embeddings)
-```
-
-</details>
-
 ## Evaluation
+
+<p align="center">
+  <img src="assets/kure_v3_ndcg.png" width="100%" alt="MTEB(kor, v2) 9개 검색 태스크에서 KURE 모델과 비교 모델의 평균 nDCG@10">
+</p>
 
 최신 [mteb](https://github.com/embeddings-benchmark/mteb)(v2.x)로 **MTEB(kor, v2) Retrieval** 9개 태스크를 평가하며, 한국어 subset만 사용합니다 (Belebele: `kor_Hang-kor_Hang`; MLDR은 dev/test 평균):
 
@@ -182,14 +184,15 @@ similarities = model.similarity(embeddings, embeddings)
 - [LawIRKo](https://huggingface.co/datasets/on-and-on/lawgov_ir-ko): 한국어 법령·판례 검색
 - [SQuADKorV1Retrieval](https://huggingface.co/datasets/yjoonjang/squad_kor_v1): KorQuAD v1 문단 검색
 
-후기 상호작용 모델은 mteb + PLAID 검색으로 직접 측정하고, 밀집 모델 행은 공식 [MTEB results 저장소](https://github.com/embeddings-benchmark/results)의 점수를 사용합니다. 직접 평가하려면 모델명과 paradigm을 넘기면 됩니다:
+<details>
+<summary><h3>Dense Leaderboard</h3></summary>
+
+Dense 모델은 mteb으로, late-interaction 모델은 mteb + PLAID (4-bit) 검색으로 평가합니다. 공식 [MTEB results 저장소](https://github.com/embeddings-benchmark/results)에 결과가 있는 모델은 그 점수를 쓰고, 나머지는 `eval/dense/evaluate.py`로 직접 평가합니다. 모델 이름과 paradigm을 넘겨 평가할 수 있습니다:
 
 ```bash
+uv run python eval/dense/evaluate.py nlpai-lab/KURE-v3 single-vector
 uv run --extra late-interaction --no-default-groups python eval/dense/evaluate.py nlpai-lab/KURE-v2 multi-vector
-uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
 ```
-
-### MTEB-ko-retrieval Leaderboard
 
 9개 태스크 평균입니다. 태스크별 결과는 [`eval/dense/results/README.md`](eval/dense/results/README.md)와 공식 [MTEB 리더보드](https://mteb-leaderboard.hf.space/benchmark/MTEB(kor%2C%20v2)?types=Retrieval&s.summary=meanTask&d.summary=desc)에서 확인할 수 있습니다.
 
@@ -198,6 +201,7 @@ uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
 | **[nlpai-lab/KURE-v2](https://huggingface.co/nlpai-lab/KURE-v2)** | Late-interaction | 154M | **0.8160** | **0.8921** |
 | nvidia/Nemotron-3-Embed-8B-BF16 | Dense | 8.0B | 0.8127 | 0.8934 |
 | yjoonjang/colbert-ko-en-v2 | Late-interaction | 149M | 0.8063 | 0.8827 |
+| **[nlpai-lab/KURE-v3](https://huggingface.co/nlpai-lab/KURE-v3)** | Dense | 1.1B | 0.8027 | 0.8857 |
 | sionic-ai/comsat-embed-ko-8b-preview | Dense | 7.6B | 0.7927 | 0.8876 |
 | lightonai/mLateOn | Late-interaction | 307M | 0.7906 | 0.8740 |
 | Qwen/Qwen3-Embedding-8B | Dense | 7.6B | 0.7826 | 0.8815 |
@@ -212,15 +216,38 @@ uv run python eval/dense/evaluate.py nlpai-lab/KURE-v1 single-vector
 | nvidia/llama-nemotron-embed-1b-v2 | Dense | 1.2B | 0.7564 | 0.8560 |
 | dragonkue/BGE-m3-ko | Dense | 568M | 0.7547 | 0.8513 |
 | BAAI/bge-m3 | Dense | 568M | 0.7509 | 0.8588 |
+| jinaai/jina-embeddings-v5-text-small-retrieval | Dense | 596M | 0.7419 | 0.8434 |
 | perplexity-ai/pplx-embed-v1-0.6b | Dense | 596M | 0.7390 | 0.8377 |
 | perplexity-ai/pplx-embed-v1-late-0.6b | Late-interaction | 596M | 0.7381 | 0.8328 |
 | **[nlpai-lab/KoE5](https://huggingface.co/nlpai-lab/KoE5)** | Dense | 560M | 0.7337 | 0.8300 |
 | **[nlpai-lab/KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised)** | Late-interaction | 154M | 0.7283 | 0.8268 |
+| google/embeddinggemma-300m | Dense | 308M | 0.7254 | 0.8383 |
 | Qwen/Qwen3-Embedding-0.6B | Dense | 596M | 0.7140 | 0.8222 |
 | dragonkue/colbert-ko-0.1b | Late-interaction | 149M | 0.6776 | 0.7723 |
 | yjoonjang/colbert-ko-v1 | Late-interaction | 149M | 0.6282 | 0.7212 |
 
-### Sparse Leaderboard
+1,024 차원으로 줄여도 KURE-v3는 전체 차원 점수의 99%를 유지하며, comsat-embed-ko-8b-preview와 Qwen3-Embedding-8B(4,096 차원)보다 높습니다. 차원별 점수는 [`eval/dense/results/README.md`](eval/dense/results/README.md#kure-v3-at-matryoshka-dimensions)에 있습니다.
+
+<p align="center">
+  <img src="assets/kure_v3_mrl.png" width="70%" alt="Average nDCG@10 of KURE-v3 on MTEB(kor, v2) Retrieval at each Matryoshka dimension">
+</p>
+
+### RTEB (eng)
+
+Dense와 late-interaction 모델은 영어 검색 벤치마크인 [RTEB](https://huggingface.co/blog/rteb)에서도 평가합니다. 코드 도메인을 제외한 공개 태스크 8개를 사용하므로, 비공개 태스크와 코드 태스크까지 포함하는 RTEB 리더보드 점수와는 다릅니다. 태스크별 점수는 [`eval/dense/results/README.md`](eval/dense/results/README.md)에 있습니다.
+
+```bash
+uv run python eval/dense/evaluate.py nlpai-lab/KURE-v3 single-vector --suite rteb_eng
+```
+
+<p align="center">
+  <img src="assets/rteb_dense_late_interaction.png" width="100%" alt="Average nDCG@10 on the public RTEB English tasks of dense and late-interaction retrievers">
+</p>
+
+</details>
+
+<details>
+<summary><h3>Sparse Leaderboard</h3></summary>
 
 Learned sparse 모델은 같은 9개 태스크를 같은 기준으로, mteb의 `SparseEncoder` wrapper를 사용해 bf16, 최대 8,192 토큰에서 벡터 pruning 없이 평가합니다. nDCG@10과 함께 질의·문서당 평균 활성 차원 수와 FLOPs를 보고합니다. 직접 평가하려면 다음을 실행합니다:
 
@@ -228,7 +255,7 @@ Learned sparse 모델은 같은 9개 태스크를 같은 기준으로, mteb의 `
 uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-nano
 ```
 
-결과는 9개 한국어 검색 태스크의 평균입니다. 점선은 참고용 dense 모델입니다. 태스크별 결과와 영어 BEIR 결과는 [`eval/sparse/results/README.md`](eval/sparse/results/README.md)에 있습니다.
+결과는 9개 한국어 검색 태스크의 평균입니다. 점선은 참고용 dense 모델입니다. 태스크별 결과와 영어 BEIR, RTEB 결과는 [`eval/sparse/results/README.md`](eval/sparse/results/README.md)에 있습니다.
 
 <p align="center">
   <img src="assets/sparse_ndcg_flops.png" width="80%" alt="9개 한국어 태스크에서 sparse 검색 모델의 평균 nDCG@10 대비 평균 FLOPs">
@@ -244,7 +271,25 @@ uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-nano
 | telepix/PIXIE-Splade-v1.0 | 149M | 0.6636 | 121 | 625 | 22.4 |
 | opensearch-project/opensearch-neural-sparse-encoding-multilingual-v1 | 167M | 0.5444 | 29 | 176 | 6.8 |
 
-### Reranker Leaderboard
+### English Retrieval (BEIR, RTEB)
+
+Sparse 모델은 영어 벤치마크 두 개에서도 nDCG@10으로 평가합니다. BEIR 13개 태스크(BEIR-13)와, 코드 도메인을 제외한 [RTEB](https://huggingface.co/blog/rteb)의 **공개 영어 태스크 8개**입니다. SparseUp은 자체 길이 제한(쿼리 128, 문서 512 토큰)으로, 나머지 모델은 최대 8,192 토큰으로 평가합니다. RTEB 평균은 비공개 태스크와 코드 태스크까지 포함하는 RTEB 리더보드 점수와 다릅니다.
+
+```bash
+uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-base --suite beir_eng --max-seq-length 8192
+uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-base --suite rteb_eng --max-seq-length 8192
+```
+
+<p align="center">
+  <img src="assets/beir_rteb_sparse.png" width="100%" alt="Average nDCG@10 on BEIR-13 and on the public RTEB English tasks of sparse retrievers">
+</p>
+
+태스크별 결과는 [`eval/sparse/results/README.md`](eval/sparse/results/README.md)에 있습니다.
+
+</details>
+
+<details>
+<summary><h3>Reranker Leaderboard</h3></summary>
 
 Reranker는 같은 9개 태스크에서 [reranker-simple-benchmark](https://github.com/instructkr/reranker-simple-benchmark) 프로토콜로 평가합니다: 각 질의의 후보는 정답 문서와, negative 로 BM25 상위 50개 중 정답을 뺀 나머지이며, 모든 모델을 bf16, 최대 8,192 토큰으로 실행하고, nDCG@10과 초당 처리 쌍 수(PPS, NVIDIA RTX A6000 48GB 1대)를 보고합니다. 직접 평가하려면 다음을 실행합니다:
 
@@ -259,33 +304,22 @@ uv run python eval/cross-encoder/evaluate.py nlpai-lab/KURE-Reranker-nano --spee
   <img src="assets/reranker_pps_vs_ndcg.png" width="80%" alt="9개 한국어 태스크에서 reranker의 평균 nDCG@10 대비 평균 PPS">
 </p>
 
-| Model | Params | Mean nDCG@10 | Mean PPS |
-|---|---:|---:|---:|
-| Qwen/Qwen3-Reranker-8B | 8.2B | 0.8990 | 15.0 |
-| Qwen/Qwen3-Reranker-4B | 4.0B | 0.8916 | 24.3 |
-| KaLM-Embedding/KaLM-Reranker-V1-Large-R2 | 7.5B | 0.8910 | 25.3 |
-| **[nlpai-lab/KURE-Reranker-base](https://huggingface.co/nlpai-lab/KURE-Reranker-base)** | 1.7B | **0.8800** | 55.0 |
-| **[nlpai-lab/KURE-Reranker-nano](https://huggingface.co/nlpai-lab/KURE-Reranker-nano)** | 149M | **0.8757** | **482.4** |
-| zeroentropy/zerank-2-reranker | 4.0B | 0.8652 | 29.3 |
-| mixedbread-ai/mxbai-rerank-large-v2 | 1.5B | 0.8607 | 64.8 |
-| lightonai/LightOn-rerank-PW-4B | 4.5B | 0.8605 | 15.1 |
-| Qwen/Qwen3-Reranker-0.6B | 596M | 0.8528 | 101.0 |
-| BAAI/bge-reranker-v2-m3 | 568M | 0.8518 | 412.6 |
-| nvidia/llama-nemotron-rerank-1b-v2 | 1.2B | 0.8468 | 128.2 |
-| nlpai-lab/LAMAR-600m | 568M | 0.8375 | 415.0 |
-| dragonkue/bge-reranker-v2-m3-ko | 568M | 0.8199 | 409.1 |
-| BAAI/bge-reranker-v2-gemma | 2.5B | 0.8099 | 58.8 |
-| upskyy/ko-reranker-8k | 568M | 0.8054 | 409.8 |
-| Dongjin-kr/ko-reranker | 560M | 0.7861 | 488.0 |
-| telepix/PIXIE-Spell-Reranker-Preview-0.6B | 596M | 0.7760 | 99.7 |
+</details>
 
 ## Training Details
+
+### KURE-v3
+
+학습 코드는 [`train/dense`](train/dense)에 있습니다.
+
+- [nvidia/Nemotron-3-Embed-1B-BF16](https://huggingface.co/nvidia/Nemotron-3-Embed-1B-BF16)에서 출발해, KURE-v2 SFT 데이터에서 질의별 후보에 대한 교사 점수를 증류(min-max 정규화 KL)하여 최대 8,192 토큰으로 1 에폭 학습합니다.
+- 2,048, 1,024, 512, 256 차원에서 Matryoshka 학습을 합니다.
 
 ### KURE-Sparse
 
 학습 코드는 [`train/sparse`](train/sparse)에 있습니다.
 
-- KURE-v2 SFT 데이터에서 Qwen3-Reranker-8B 교사로부터, in-batch 대조 학습과 질의별 후보에 대한 KL 증류를 결합하고 질의·문서 모두에 L1 sparsity 페널티를 주어 최대 8,192 토큰으로 1 에폭 학습합니다.
+- KURE-v2 SFT 데이터에서 Qwen3-Reranker 교사로부터, in-batch 대조 학습과 질의별 후보에 대한 KL 증류를 결합하고 질의·문서 모두에 L1 sparsity 정규화를 적용하여 최대 8,192 토큰으로 1 에폭 학습합니다.
 - **KURE-Sparse-base**: [omai-research/milco-650m](https://huggingface.co/omai-research/milco-650m)에서 fine-tuning. 영어 pivot 어휘 30,522개와 원문 토큰 250,002개 위에서 점수화.
 - **KURE-Sparse-nano**: [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised)에 A.X-Encoder-base의 MLM 헤드를 이식하고 2,070만 쌍으로 사전학습한 뒤 fine-tuning. 그 결과 어휘는 36,282개입니다.
 
@@ -294,20 +328,18 @@ uv run python eval/cross-encoder/evaluate.py nlpai-lab/KURE-Reranker-nano --spee
 학습 코드는 [`train/cross-encoder`](train/cross-encoder)에 있습니다.
 
 - KURE-v2 SFT 데이터를 질의-문서 3,330만 쌍으로 펼쳐, Qwen3-Reranker 교사로부터 pointwise MSE로 1 에폭 증류합니다.
-- **KURE-Reranker-base**: [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B)를 Qwen3-Reranker 템플릿 위의 logit("yes") − logit("no")로 점수화; 최대 8,192 토큰.
-- **KURE-Reranker-nano**: [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base)에 단일 로짓 헤드; 최대 8,192 토큰.
+- **KURE-Reranker-base**: [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B)를 Qwen3-Reranker 템플릿 위의 logit("yes") − logit("no")로 점수화, 최대 8,192 토큰.
+- **KURE-Reranker-nano**: [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base)에 단일 로짓 헤드, 최대 8,192 토큰.
 
 ### KURE-v2
 
 전체 2단계 학습 코드는 [`train/late-interaction`](train/late-interaction)에 있습니다.
 
-- [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) 위에 다층 투영 헤드를 얹은 구조(토큰당 128차원, MaxSim 점수)이며 [PyLate](https://github.com/lightonai/pylate)로 학습했습니다.
+- [skt/A.X-Encoder-base](https://huggingface.co/skt/A.X-Encoder-base) 위에 다층 투영 헤드를 얹은 구조(토큰당 128차원)입니다.
 - **1단계 (PFT)**: 약한 관련성의 한국어·영어 2,070만 쌍에 대한 거대 배치 대조 학습. 이 단계만 거친 모델을 [KURE-v2-unsupervised](https://huggingface.co/nlpai-lab/KURE-v2-unsupervised)로 공개합니다.
 - **2단계 (SFT)**: 하드 네거티브와 위음성 필터링을 적용한 삼중항 303만 개에 대해 대조 학습과 리랭커 교사 점수의 KL 증류를 결합합니다.
 
 ### KURE-v1
-
-학습 코드는 [`train/dense`](train/dense)에 있습니다.
 
 - [BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3)를 한국어 query-document-hard_negative(5개) 약 200만 쌍으로 fine-tuning.
 - CachedGISTEmbedLoss, 배치 4,096, 학습률 2e-5, 1 에폭.

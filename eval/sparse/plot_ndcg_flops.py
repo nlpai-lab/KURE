@@ -1,6 +1,6 @@
 """Avg nDCG@10 vs avg FLOPs of the sparse models in eval/sparse/results, for the README.
 
-Reads the same per-task cells as make_leaderboard.py (MTEB(kor, v2) conventions). Styled like the KURE reranker
+Reads the same per-task cells as make_leaderboard_mteb_kor.py (MTEB(kor, v2) conventions). Styled like the KURE reranker
 figure: colour = model-size bin, label = short name plus its size in small muted type, ours drawn as a star.
 matplotlib is not a project dependency:
 
@@ -21,7 +21,7 @@ from matplotlib.patches import Circle  # noqa: E402
 from matplotlib.ticker import FixedFormatter, FixedLocator, NullFormatter  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import make_leaderboard as L  # noqa: E402
+import make_leaderboard_mteb_kor as L  # noqa: E402
 
 INK = "#1a2027"
 MUTED = "#8a94a6"
@@ -74,7 +74,7 @@ def dense_average(model_dir: Path) -> float:
 
 def averages(model_dir: Path) -> tuple[float, float]:
     got = {}
-    for f in (model_dir / "ko").glob("*.json"):
+    for f in (model_dir / "mteb_kor").glob("*.json"):
         if f.stem in L.TASKS:
             cell = L.cell(json.loads(f.read_text())["scores"], f.stem, L.FIELDS)
             if cell:

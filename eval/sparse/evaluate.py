@@ -2,12 +2,13 @@
 
 The 20-task suite is the one used in
 https://github.com/embeddings-benchmark/results/pull/654; this runs its nine retrieval tasks.
-Pass --all-tasks for all twenty, or --tasks to name specific ones. --suite en runs the English
-counterpart instead: the 13 BEIR tasks plus MS MARCO (dev), as SparseUp reports them. Vectors are
-used as the model produces them: no max_active_dims pruning.
+Pass --all-tasks for all twenty, or --tasks to name specific ones. --suite runs an English set instead:
+beir_eng, the 13 BEIR tasks plus MS MARCO (dev), as SparseUp reports them, or rteb_eng, the eight public
+non-code tasks of RTEB(eng, beta). Vectors are used as the model produces them, with no max_active_dims
+pruning unless --max-active-dims asks for it. The reported results use none.
 
-Results go under eval/sparse/results/<model>/<suite>/, one mteb result file per task, and
-eval/sparse/make_leaderboard.py (ko) or make_leaderboard_en.py (en) turns them into the leaderboard.
+Results go under eval/sparse/results/<model>/<suite>/ (suite = mteb_kor, beir_eng or rteb_eng), one mteb
+result file per task, and eval/sparse/make_leaderboard_<suite>.py turns them into the leaderboards.
 Each task file also carries the sparsity numbers ST's SparseInformationRetrievalEvaluator
 reports -- query/corpus active dims and sparsity ratio, and avg_flops, the dot product of the
 mean query and mean corpus activation-indicator vectors -- computed from the very embeddings
@@ -19,7 +20,9 @@ rather than reimplemented.
 
     uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-nano
     uv run python eval/sparse/evaluate.py output/kure-sparse-base/final --tasks PublicHealthQA
-    uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-base --suite en --max-seq-length 8192
+    uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-base --suite beir_eng --max-seq-length 8192
+    uv run python eval/sparse/evaluate.py nlpai-lab/KURE-Sparse-base --suite rteb_eng --max-seq-length 8192
+    uv run python eval/sparse/evaluate.py utahnlp/laconic-1b --suite rteb_eng --revision refs/pr/1 --max-seq-length 8192
 """
 
 from __future__ import annotations
@@ -43,14 +46,19 @@ from mteb.types import PromptType
 
 BENCHMARK = "MTEB(kor, v2)"
 RETRIEVAL_TYPES = ("Retrieval",)
-# --suite en: the 13 BEIR tasks plus MS MARCO (dev), as SparseUp reports them. Biggest corpus first.
+# --suite beir_eng: the 13 BEIR tasks plus MS MARCO (dev), as SparseUp reports them. Biggest corpus first.
 BEIR_TASKS = ["MSMARCO", "ClimateFEVER", "FEVER", "HotpotQA", "DBPedia", "NQ", "QuoraRetrieval", "Touche2020",
               "TRECCOVID", "SCIDOCS", "FiQA2018", "ArguAna", "NFCorpus", "SciFact"]
 
 
+# --suite rteb_eng: the public non-code tasks of RTEB(eng, beta); its other tasks are private or code. Biggest first.
+RTEB_TASKS = ["CUREv1", "ChatDoctorRetrieval", "FinQARetrieval", "AILACasedocs", "LegalSummarization",
+              "HC3FinanceRetrieval", "FinanceBenchRetrieval", "AILAStatutes"]
+
+
 def select_tasks(suite: str, all_tasks: bool, only: list[str] | None):
-    if suite == "en":
-        tasks = list(mteb.get_tasks(tasks=BEIR_TASKS, languages=["eng"]))
+    if suite in ("beir_eng", "rteb_eng"):
+        tasks = list(mteb.get_tasks(tasks=BEIR_TASKS if suite == "beir_eng" else RTEB_TASKS, languages=["eng"]))
     else:
         tasks = list(mteb.get_benchmark(BENCHMARK).tasks)
     if only:
@@ -127,12 +135,12 @@ class SparsityStatsWrapper(SparseEncoderWrapper):
     for avg_flops.
     """
 
-    def __init__(self, model_name, dtype: torch.dtype):
+    def __init__(self, model_name, dtype: torch.dtype, **kwargs):
         from sentence_transformers import SparseEncoder
 
         # Both KURE-Sparse models ship custom module code (pooling.py, milco_encoder.py), and every model
         # is scored in the same dtype; MILCO keeps fp32 master weights on load, so cast after loading.
-        super().__init__(SparseEncoder(model_name, trust_remote_code=True).to(dtype))
+        super().__init__(SparseEncoder(model_name, trust_remote_code=True, **kwargs).to(dtype))
         # The OpenSearch wrapper leaves the meta to its registry entries; a bare path has none,
         # and the result cache needs a name (it becomes the results directory) and a revision.
         self.mteb_model_meta = ModelMeta.create_empty(
@@ -176,8 +184,8 @@ class SparsityStatsWrapper(SparseEncoderWrapper):
 class SuiteResultCache(mteb.ResultCache):
     """mteb's result cache with the language suite in place of the revision directory.
 
-    Results land in results/<model>/<suite>/<task>.json (suite = ko or en), so a model's Korean and English runs
-    sit side by side. Saving and the skip-if-on-disk check both go through this one path method.
+    Results land in results/<model>/<suite>/<task>.json (suite = mteb_kor, beir_eng or rteb_eng), so a model's
+    Korean and English runs sit side by side. Saving and the skip-if-on-disk check both go through this one path method.
     """
 
     def __init__(self, cache_path: Path, suite: str):
@@ -248,8 +256,12 @@ def main() -> None:
     parser.add_argument("--dtype", default="bfloat16", choices=["bfloat16", "float16", "float32"])
     parser.add_argument("--max-seq-length", type=int, default=0,
                         help="Override the checkpoint's own limit; 0 keeps it")
-    parser.add_argument("--suite", default="ko", choices=["ko", "en"],
-                        help="ko: MTEB(kor, v2) retrieval; en: the 13 BEIR tasks + MS MARCO (English)")
+    parser.add_argument("--suite", default="mteb_kor", choices=["mteb_kor", "beir_eng", "rteb_eng"],
+                        help="mteb_kor: MTEB(kor, v2) retrieval; beir_eng: the 13 BEIR tasks + MS MARCO; "
+                             "rteb_eng: the public non-code RTEB(eng) tasks")
+    parser.add_argument("--revision", default=None, help="Hub revision, e.g. refs/pr/1")
+    parser.add_argument("--max-active-dims", type=int, default=None,
+                        help="Keep the top-k dims per vector (unset for the reported results)")
     parser.add_argument("--all-tasks", action="store_true", help="Include the non-retrieval tasks")
     parser.add_argument("--tasks", nargs="+", help="Run only these task names")
     parser.add_argument("--overwrite", action="store_true", help="Redo tasks already on disk")
@@ -260,7 +272,8 @@ def main() -> None:
     tasks = select_tasks(args.suite, args.all_tasks, args.tasks)
     logging.info(f"{len(tasks)} tasks: {[t.metadata.name for t in tasks]}")
 
-    model = SparsityStatsWrapper(args.model_path, dtype=getattr(torch, args.dtype))
+    extra = {k: v for k, v in (("revision", args.revision), ("max_active_dims", args.max_active_dims)) if v}
+    model = SparsityStatsWrapper(args.model_path, dtype=getattr(torch, args.dtype), **extra)
     if args.max_seq_length:
         # The wrapper builds the SparseEncoder itself and takes no length argument, so reach
         # through to it. Our models trained at 1024 but sit on a backbone pretrained at 16384,
@@ -277,8 +290,7 @@ def main() -> None:
             + (f" | query {extra['query_active_dims']:.1f} / corpus {extra['corpus_active_dims']:.1f} "
                f"active dims, avg_flops {extra['avg_flops']:.2f}" if extra else "")
         )
-    board = "make_leaderboard_en.py" if args.suite == "en" else "make_leaderboard.py"
-    print(f"done; results under eval/sparse/results/. Table: uv run python eval/sparse/{board}")
+    print(f"done; results under eval/sparse/results/. Table: uv run python eval/sparse/make_leaderboard_{args.suite}.py")
 
 
 if __name__ == "__main__":

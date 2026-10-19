@@ -43,10 +43,9 @@ def main() -> None:
     print("| Model | Mean NDCG@10 | Mean PPS |")
     print("|---|---:|---:|")
     for name, ndcg, pps, n in rows:
-        shown = f"**{name}**" if name.startswith("nlpai-lab/KURE") else name
         ndcg_s = f"{ndcg:.4f}" if ndcg is not None else f"— ({n}/{len(TASKS)} tasks)"
         pps_s = f"{pps:.1f}" if pps is not None else "—"
-        print(f"| {shown} | {ndcg_s} | {pps_s} |")
+        print(f"| {name} | {ndcg_s} | {pps_s} |")
 
 
 if __name__ == "__main__":
