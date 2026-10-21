@@ -363,6 +363,15 @@ Index-size and latency benchmarks of KURE-v2 across ANN backends, token pooling 
 If you find our models helpful, please consider citing:
 
 ```bibtex
+@misc{kure-v3,
+  title  = {KURE-v3: a Korean-English bilingual dense retriever},
+  author = {Jang, Youngjoon and Son, Junyoung and Lee, Taemin and Hong, Seongtae and Lee, Jungseob and Lim, Heuiseok},
+  year   = {2026},
+  url    = {https://huggingface.co/nlpai-lab/KURE-v3},
+}
+```
+
+```bibtex
 @misc{kure-reranker,
   title  = {KURE-Reranker: Korean-English bilingual reranking models},
   author = {Jang, Youngjoon and Hong, Seongtae and Son, Junyoung and Lee, Taemin and Lim, Heuiseok},
