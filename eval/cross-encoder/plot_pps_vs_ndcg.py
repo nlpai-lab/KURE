@@ -63,7 +63,7 @@ SHORT = {
     "Qwen/Qwen3-Reranker-8B": "Qwen3-8B",
     "Qwen/Qwen3-Reranker-4B": "Qwen3-4B",
     "Qwen/Qwen3-Reranker-0.6B": "Qwen3-0.6B",
-    "KaLM-Embedding/KaLM-Reranker-V1-Large-R2": "KaLM-Large-R2",
+    "KaLM-Embedding/KaLM-Reranker-V1-Large-R2": "KaLM-R2",
     "zeroentropy/zerank-2-reranker": "zerank-2",
     "lightonai/LightOn-rerank-PW-4B": "LightOn-4B",
     "mixedbread-ai/mxbai-rerank-large-v2": "mxbai-large-v2",
@@ -85,6 +85,7 @@ OFFSET = {
     "PIXIE-0.6B": (10, -5),
     "bge-v2-m3-ko": (-10, 0),
     "ko-reranker-8k": (-10, 0),
+    "KaLM-R2": (14, 15, "center"),  # above, slightly right: KURE-Reranker-base sits to its right
     "KURE-Reranker-base": (12, 0),
     "KURE-Reranker-nano": (12, 0),
 }
