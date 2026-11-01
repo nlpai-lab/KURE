@@ -38,15 +38,15 @@ BEIR-13 is the average without MS MARCO. Query and document dims and FLOPs are a
 
 ## RTEB(eng): per-task nDCG@10
 
-The eight public non-code tasks of RTEB(eng, beta). Each task score is the mean over its splits and subsets, so the average is not the RTEB leaderboard number, which also covers RTEB's private and code tasks.
+The eight public non-code tasks of RTEB(eng, beta). Each task score is the mean over its splits (CUREv1: its English subset only, as RTEB(eng) defines it), so the average is not the RTEB leaderboard number, which also covers RTEB's private and code tasks.
 
 | Model | Params | Avg | CUREv1 | ChatDoctor | FinQA | AILACasedocs | LegalSummarization | HC3Finance | FinanceBench | AILAStatutes | Query dims | Document dims | FLOPs |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| utahnlp/laconic-1b | 1.2B | **0.5415** | 0.5340 | 0.5272 | 0.6727 | **0.3436** | 0.6064 | 0.5893 | 0.7449 | **0.3142** | 227.1 | 1331.6 | 107.21 |
-| **nlpai-lab/KURE-Sparse-base** | 593M | 0.5093 | **0.5996** | 0.3914 | **0.7838** | 0.2298 | 0.5494 | **0.5951** | **0.7525** | 0.1727 | 787.0 | 1899.1 | 277.55 |
-| Linkup-Platform/linkup-sparseup-embed-v1 | 188M | 0.4941 | 0.4010 | **0.5424** | 0.5805 | 0.2406 | 0.6430 | 0.5900 | 0.6852 | 0.2700 | 152.4 | 325.7 | 25.06 |
-| **nlpai-lab/KURE-Sparse-nano** | 149M | 0.4750 | 0.3591 | 0.4730 | 0.7042 | 0.2860 | 0.6399 | 0.4438 | 0.7005 | 0.1939 | 359.8 | 1274.5 | 109.86 |
-| opensearch-project/opensearch-neural-sparse-encoding-doc-v3-gte | 137M | 0.4721 | 0.3004 | 0.5015 | 0.7344 | 0.2596 | **0.6554** | 0.4265 | 0.6855 | 0.2139 | 82.7 | 359.2 | 12.75 |
-| naver/splade-v3 | 110M | 0.4596 | 0.3306 | 0.5036 | 0.6374 | 0.3153 | 0.5663 | 0.4118 | 0.6878 | 0.2241 | 203.2 | 286.7 | 35.00 |
-| omai-research/milco-650m | 593M | 0.4301 | 0.5674 | 0.2344 | 0.7399 | 0.2197 | 0.3078 | 0.5451 | 0.6513 | 0.1747 | 548.0 | 1375.1 | 163.65 |
-| telepix/PIXIE-Splade-v1.5 | 149M | 0.3630 | 0.3414 | 0.2178 | 0.5751 | 0.2082 | 0.5216 | 0.3042 | 0.5180 | 0.2181 | 860.1 | 1835.6 | 391.32 |
+| utahnlp/laconic-1b | 1.2B | **0.5520** | **0.6173** | 0.5272 | 0.6727 | **0.3436** | 0.6064 | 0.5893 | 0.7449 | **0.3142** | 224.0 | 1331.6 | 106.64 |
+| Linkup-Platform/linkup-sparseup-embed-v1 | 188M | 0.5139 | 0.5596 | **0.5424** | 0.5805 | 0.2406 | 0.6430 | 0.5900 | 0.6852 | 0.2700 | 149.0 | 325.7 | 25.31 |
+| **nlpai-lab/KURE-Sparse-base** | 593M | 0.5114 | 0.6168 | 0.3914 | **0.7838** | 0.2298 | 0.5494 | **0.5951** | **0.7525** | 0.1727 | 785.9 | 1899.1 | 277.36 |
+| **nlpai-lab/KURE-Sparse-nano** | 149M | 0.5026 | 0.5798 | 0.4730 | 0.7042 | 0.2860 | 0.6399 | 0.4438 | 0.7005 | 0.1939 | 359.6 | 1274.5 | 110.90 |
+| opensearch-project/opensearch-neural-sparse-encoding-doc-v3-gte | 137M | 0.4996 | 0.5200 | 0.5015 | 0.7344 | 0.2596 | **0.6554** | 0.4265 | 0.6855 | 0.2139 | 81.7 | 359.2 | 12.78 |
+| naver/splade-v3 | 110M | 0.4883 | 0.5606 | 0.5036 | 0.6374 | 0.3153 | 0.5663 | 0.4118 | 0.6878 | 0.2241 | 201.4 | 286.7 | 35.13 |
+| omai-research/milco-650m | 593M | 0.4321 | 0.5837 | 0.2344 | 0.7399 | 0.2197 | 0.3078 | 0.5451 | 0.6513 | 0.1747 | 546.6 | 1375.1 | 163.50 |
+| telepix/PIXIE-Splade-v1.5 | 149M | 0.3933 | 0.5835 | 0.2178 | 0.5751 | 0.2082 | 0.5216 | 0.3042 | 0.5180 | 0.2181 | 857.3 | 1835.6 | 390.55 |

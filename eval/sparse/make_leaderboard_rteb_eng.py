@@ -2,8 +2,8 @@
 RTEB(eng, beta), their mean, plus the sparsity numbers evaluate.py records (avg query/corpus active dims, avg_flops)
 averaged over the tasks.
 
-A task's score is the mean over all its splits and subsets, as mteb scores it (CUREv1: "all" plus its ten specialties,
-English subset). RTEB's other tasks are private or code, so this mean is not the RTEB leaderboard number.
+A task's score is the mean over all its splits and English subsets (CUREv1: "all" plus its ten specialties, en subset
+only, as RTEB(eng, beta) defines it; its es/fr subsets are cross-lingual). RTEB's other tasks are private or code, so this mean is not the RTEB leaderboard number.
 
     uv run python eval/sparse/make_leaderboard_rteb_eng.py
 """
@@ -17,9 +17,13 @@ ABBR = ["CURE", "ChatDoc", "FinQA", "AILAcase", "LegalSum", "HC3Fin", "FinBench"
 FIELDS = ["main_score", "query_active_dims", "corpus_active_dims", "avg_flops"]
 
 
+# CUREv1 also has Spanish and French queries over its English corpus (subsets es, fr); RTEB(eng) scores only en
+ENG_SUBSETS = {"default", "en"}
+
+
 def task_cell(scores_by_split) -> list[float]:
-    """Each field averaged over every split and subset entry."""
-    entries = [e for split in scores_by_split.values() for e in split]
+    """Each field averaged over every split and English subset entry."""
+    entries = [e for split in scores_by_split.values() for e in split if e["hf_subset"] in ENG_SUBSETS]
     return [sum(e[f] for e in entries) / len(entries) for f in FIELDS]
 
 

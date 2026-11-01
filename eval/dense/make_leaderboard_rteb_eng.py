@@ -1,8 +1,8 @@
 """RTEB(eng) leaderboard over eval/dense/results/<model>/rteb_eng: nDCG@10 on the eight public non-code tasks of
 RTEB(eng, beta), their mean, and each model's type and size, one aligned row per model.
 
-A task's score is the mean over all its splits and subsets, as mteb scores it (CUREv1: "all" plus its ten specialties,
-English subset). RTEB's other tasks are private or code, so this mean is not the RTEB leaderboard number. Type and size
+A task's score is the mean over all its splits and English subsets (CUREv1: "all" plus its ten specialties, en subset
+only, as RTEB(eng, beta) defines it; its es/fr subsets are cross-lingual). RTEB's other tasks are private or code, so this mean is not the RTEB leaderboard number. Type and size
 come from the model's mteb_kor model_meta.json when there is one.
 
     uv run python eval/dense/make_leaderboard_rteb_eng.py
@@ -18,9 +18,13 @@ TASKS = ["CUREv1", "ChatDoctorRetrieval", "FinQARetrieval", "AILACasedocs", "Leg
 ABBR = ["CURE", "ChatDoc", "FinQA", "AILAcase", "LegalSum", "HC3Fin", "FinBench", "AILAstat"]
 
 
+# CUREv1 also has Spanish and French queries over its English corpus (subsets es, fr); RTEB(eng) scores only en
+ENG_SUBSETS = {"default", "en"}
+
+
 def task_score(scores_by_split) -> float:
-    """main_score averaged over every split and subset entry."""
-    vals = [e["main_score"] for split in scores_by_split.values() for e in split]
+    """main_score averaged over every split and English subset entry."""
+    vals = [e["main_score"] for split in scores_by_split.values() for e in split if e["hf_subset"] in ENG_SUBSETS]
     return sum(vals) / len(vals)
 
 

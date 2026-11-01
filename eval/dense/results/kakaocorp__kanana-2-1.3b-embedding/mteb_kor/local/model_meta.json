@@ -1,0 +1,41 @@
+{
+  "loader_kwargs": {},
+  "name": "kakaocorp/kanana-2-1.3b-embedding",
+  "revision": "107b09b19ea3628acbd42615ee9ad59b82f604a3",
+  "release_date": null,
+  "languages": null,
+  "n_parameters": 1291478272,
+  "n_active_parameters_override": null,
+  "n_embedding_parameters": null,
+  "memory_usage_mb": null,
+  "max_tokens": 4096,
+  "embed_dim": 1280,
+  "license": null,
+  "open_weights": null,
+  "public_training_code": null,
+  "public_training_data": null,
+  "framework": [
+    "Sentence Transformers",
+    "PyTorch",
+    "safetensors"
+  ],
+  "reference": null,
+  "similarity_fn_name": "cosine",
+  "use_instructions": null,
+  "training_datasets": null,
+  "adapted_from": null,
+  "superseded_by": null,
+  "modalities": [
+    "text"
+  ],
+  "model_type": [
+    "dense"
+  ],
+  "citation": null,
+  "contacts": null,
+  "experiment_kwargs": null,
+  "output_dtypes": null,
+  "extra_requirements_groups": null,
+  "loader": "SentenceTransformerEncoderWrapper",
+  "is_cross_encoder": false
+}
