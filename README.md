@@ -374,21 +374,35 @@ If you find our models helpful, please consider citing:
 ```
 
 ```bibtex
-@misc{kure-reranker,
-  title  = {KURE-Reranker: Korean-English bilingual reranking models},
-  author = {Jang, Youngjoon and Hong, Seongtae and Son, Junyoung and Lee, Taemin and Lim, Heuiseok},
+@misc{kure-sparse,
+  title  = {KURE-Sparse: a Korean-English bilingual learned sparse retriever},
+  author = {Jang, Youngjoon and Son, Junyoung and Lee, Taemin and Hong, Seongtae and Lim, Heuiseok},
   year   = {2026},
-  url    = {https://huggingface.co/nlpai-lab/KURE-Reranker-base},
+  url    = {https://huggingface.co/nlpai-lab/KURE-Sparse-nano},
 }
 ```
 
 ```bibtex
-@misc{kure-v2,
-  title  = {KURE-v2: a Korean-English bilingual late-interaction retriever},
-  author = {Jang, Youngjoon and Son, Junyoung and Lee, Taemin and Hong, Seongtae and Lim, Heuiseok},
-  year   = {2026},
-  url    = {https://huggingface.co/nlpai-lab/KURE-v2},
+@inproceedings{hong2026kure,
+  title={KURE-Reranker: A Lightweight Korean-English Bilingual Reranking Model},
+  author={Hong, Seongtae and Jang, Youngjoon and Son, Junyoung and Lee, Taemin and Lee, Jeongseob and Park, Kinam and Lim, Heuiseok},
+  booktitle={Annual Conference on Human and Language Technology},
+  pages={515--520},
+  year={2026},
+  organization={Human and Language Technology}
 }
+```
+
+```bibtex
+@inproceedings{jang2026kure,
+  title={KURE-v2: Korean-English Bilingual Late-Interaction Retrieval Model},
+  author={Jang, Youngjoon and Son, Junyoung and Hong, Seongtae and Lee, Taemin and Lee, Jeongseob and Jo, Wansoo and Park, Chanjun and Seo, Jaehyung and So, Aram and Lim, Heuiseok},
+  booktitle={Annual Conference on Human and Language Technology},
+  pages={527--532},
+  year={2026},
+  organization={Human and Language Technology}
+}
+
 ```
 
 ```bibtex
